@@ -72,6 +72,89 @@ public class POMGetter {
     }
 
 
+    public Boolean hasPlugin(String pluginArtifactId) {
+
+        String info = null;
+        Document document = null;
+
+        try {
+            document = getPom(workspace);
+        } catch (InvalidBuildFileFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression;
+        try {
+            expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']");
+            info = expression.evaluate(document);
+
+        } catch (XPathExpressionException e) {
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(document.getBaseURI()
+                        + " is not a valid POM file.");
+            } catch (InvalidBuildFileFormatException e1) {
+                e1.printStackTrace();
+            }
+
+
+        }
+
+        if (info == null || info.length() == 0) {
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(
+                        "No info information found in " + document.getBaseURI());
+            } catch (InvalidBuildFileFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        return info.contains(pluginArtifactId);
+    }
+
+
+    public String getJavaVersion(String pluginArtifactId) {
+
+        String info = null;
+        Document document = null;
+
+        try {
+            document = getPom(workspace);
+        } catch (InvalidBuildFileFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression;
+        try {
+            expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']/configuration/version");
+            info = expression.evaluate(document);
+
+        } catch (XPathExpressionException e) {
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(document.getBaseURI()
+                        + " is not a valid POM file.");
+            } catch (InvalidBuildFileFormatException e1) {
+                e1.printStackTrace();
+            }
+
+
+        }
+
+        if (info == null || info.length() == 0) {
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(
+                        "No info information found in " + document.getBaseURI());
+            } catch (InvalidBuildFileFormatException e) {
+                e.printStackTrace();
+            }
+        }
+        return info;
+    }
+
     private Document getPom(FilePath workspace)
             throws InvalidBuildFileFormatException, IOException {
 
@@ -112,8 +195,6 @@ public class POMGetter {
 
 
     private static class InvalidBuildFileFormatException extends Exception {
-        private static final long serialVersionUID = 1L;
-
         public InvalidBuildFileFormatException(String message) {
             super(message);
         }
