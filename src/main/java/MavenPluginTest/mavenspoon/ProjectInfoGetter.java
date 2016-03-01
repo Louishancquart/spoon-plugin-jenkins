@@ -13,6 +13,11 @@ import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
+
 /**
  * Sample {@link Builder}.
  * <p>
@@ -65,36 +70,21 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         */
     @Override
-    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
-        // This is where you 'build' the project.
-        // Since this is a dummy, we just say 'hello world' and call that a build.
+    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) throws IOException {
 
-        // This also shows how you can consult the global configuration of the builder
-        listener.getLogger().println("\n\nBonjour!!!!!!!!!!!!!!!!!!\n\n");
+        InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
+        String[] modules = infos.getInfos();
+        infos.writeToFile(modules);
 
-        POMGetter pomGetter = new POMGetter(workspace);
+        //insert spoon-plugin in the pom of the project
+//        POMModifier pm = new POMModifier(new POMGetter(workspace), listener, build);
 
-
-//
-//      l'artifact id.
-//      version du projet.
-//      la liste des modules du projet (si le projet n'est pas multi module, avoir une liste avec un seul élément)
-//        Analyser le pom du projet pour connaitre la version de Java qu'il utilise (si le plugin maven-compiler-plugin est utilisé).
-//        Analyser le pom du projet pour vérifier si le projet utilise le plugin checkstyle.
-//        Analyser le pom du projet pour vérifier si le projet utilise le plugin PMD.
-//        L'identifiant du commit Git du projet.
-
-
-        listener.getLogger().println("\n\n VERSION : " + pomGetter.getInfo("version") + "!\n\n");
+        //take the time
+        // run the project
+        // take the time
+        //publish infos
     }
 
-    // Overridden for better type safety.
-    // If your plugin doesn't really define any property on Descriptor,
-    // you don't have to do this.
-//    @Override
-//    public DescriptorImpl getDescriptor() {
-//        return (DescriptorImpl)super.getDescriptor();
-//    }
 
     /**
      * Descriptor for {@link ProjectInfoGetter}. Used as a singleton.
@@ -106,45 +96,16 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
-//        /**
-//         * To persist global configuration information,
-//         * simply store it in a field and call save().
-//         *
-//         * <p>
-//         * If you don't want fields to be persisted, use <tt>transient</tt>.
-//         */
-//        private boolean useFrench;
 
         /**
          * In order to load the persisted global configuration, you have to
          * call load() in the constructor.
          */
         public DescriptorImpl() {
-            /*load();*/
+            load();
         }
 
-//        /**
-//         * Performs on-the-fly validation of the form field 'name'.
-//         *
-//         * @param value
-//         * @return
-//         *      Indicates the outcome of the validation. This is sent to the browser.
-//         *      <p>
-//         *      Note that returning {@link FormValidation#error(String)} does not
-//         *      prevent the form from being saved. It just means that a message
-//         *      will be displayed to the user.
-//         */
-//        public FormValidation doCheckName(@QueryParameter String value)
-//                throws IOException, ServletException {
-//            if (value.length() == 0)
-//                return FormValidation.error("Please set a name");
-//            if (value.length() < 4)
-//                return FormValidation.warning("Isn't the name too short?");
-//            return FormValidation.ok();
-//        }
-
         public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-            // Indicates that this builder can be used with all kinds of project types 
             return true;
         }
 
@@ -155,26 +116,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
             return "Analyse POM file";
         }
 
-//        @Override
-//        public boolean configure(StaplerRequest req, JSONObject formData) throws FormException {
-//            // To persist global configuration information,
-//            // set that to properties and call save().
-//            useFrench = formData.getBoolean("useFrench");
-//            // ^Can also use req.bindJSON(this, formData);
-//            //  (easier when there are many fields; need set* methods for this, like setUseFrench)
-//            save();
-//            return super.configure(req,formData);
-//        }
-
-        /**
-         * This method returns true if the global configuration says we should speak French.
-         *
-         * The method name is bit awkward because global.jelly calls this method to determine
-         * the initial state of the checkbox by the naming convention.
-         */
-//        public boolean getUseFrench() {
-//            return useFrench;
-//        }
     }
 }
 
