@@ -3,5 +3,6 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-  This plugin is a sample to explain how to write a Jenkins plugin.
+   Project Info Getter
+   The aim of this plugin is to compiles an open-source project and spoons the project
 </div>
