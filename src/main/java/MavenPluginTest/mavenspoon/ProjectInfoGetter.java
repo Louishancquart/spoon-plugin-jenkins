@@ -93,11 +93,11 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         listener.getLogger().println("\t Has checkstyle     : " + pomGetter.hasPlugin("checkstyle").toString());
 
 //        L'identifiant du commit Git du projet.
-        if(listener.getLogger().toString().contains("GIT_COMMIT")){
-            listener.getLogger().print("contains GIT");
-        }
+//        if(listener.getLogger().toString().contains("GIT_COMMIT"){
+//            listener.getLogger().print("contains GIT");
+//        }
         try {
-            listener.getLogger().print(build.getEnvironment(listener));
+            listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
