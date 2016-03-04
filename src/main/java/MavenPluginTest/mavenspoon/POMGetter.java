@@ -192,8 +192,6 @@ public class POMGetter {
         return pomDocument;
     }
 
-
-
     private static class InvalidBuildFileFormatException extends Exception {
         public InvalidBuildFileFormatException(String message) {
             super(message);

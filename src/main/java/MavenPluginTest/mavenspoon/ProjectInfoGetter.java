@@ -15,8 +15,8 @@ import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.StringWriter;
 
 /**
  * Sample {@link Builder}.
@@ -54,8 +54,7 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
-//        return BuildStepMonitor.BUILD;
-        return BuildStepMonitor.NONE;
+        return BuildStepMonitor.BUILD;
     }
 
 
@@ -71,79 +70,11 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         */
     @Override
-    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) {
+    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) throws IOException {
 
-        // This is where you 'build' the project.
-        POMGetter pomGetter = new POMGetter(workspace);
-
-        //output POM infos
-        listener.getLogger().println("\t Actifact ID        : " + pomGetter.getInfo("artifactId"));
-        listener.getLogger().println("\t Version            : " + pomGetter.getInfo("version"));
-        listener.getLogger().println("\t Modules            : " + pomGetter.getInfo("modules")); // liste !
-
-        listener.getLogger().println("\n PLUGINS: ");
-//        Analyser le pom du projet pour vérifier si le projet utilise le plugin checkstyle.
-        Boolean mc = pomGetter.hasPlugin("maven-compiler-plugin");
-        listener.getLogger().println("\t Has Maven Compiler : " + mc.toString());
-        if (mc) {
-            listener.getLogger().println("\t Java Version   : " + pomGetter.getJavaVersion("maven-compiler-plugin"));
-        }
-
-        listener.getLogger().println("\t Has PMD            : " + pomGetter.hasPlugin("PMD").toString());
-        listener.getLogger().println("\t Has checkstyle     : " + pomGetter.hasPlugin("checkstyle").toString());
-
-//        L'identifiant du commit Git du projet.
-//        if(listener.getLogger().toString().contains("GIT_COMMIT"){
-//            listener.getLogger().print("contains GIT");
-//        }
-        try {
-            listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-//        try {
-//
-//            String content =
-//                    "<section name=\"\">\n" +
-//                    "  <table>\n" +
-//                    "    <tr>\n" +
-//                    "      <td fontattribute=\"bold\">Module</td>\n" +
-//                    "      <td fontattribute=\"bold\">Commit id version</td>\n" +
-//                    "    </tr>\n" +
-//                    "    <tr>\n" +
-//                    "      <td>wayback-cdx-server-core</td>\n" +
-//                    "      <td>1ee2444a8e11cc78a16d07f43c28c522b56cf0ee</td>\n" +
-//                    "    </tr>\n" +
-//                    "    <tr>\n" +
-//                    "      <td>wayback-core</td>\n" +
-//                    "      <td>1ee2444a8e11cc78a16d07f43c28c522b56cf0ee</td>\n" +
-//                    "    </tr>\n" +
-//                    "  </table>\n" +
-//                    "</section>";
-//
-//            File file = new File(workspace+"/target/spoon-reports/result-spoon.xml");
-//
-//            // if file doesnt exists, then create it
-//            if (!file.exists()) {
-//               System.out.println("\n\n\n\n\n \n"+file.toURI().toString());
-//                if(!file.createNewFile()){
-//                    listener.getLogger().println("file not created");
-//                }
-//            }
-//
-//            FileWriter fw = new FileWriter(file.getAbsoluteFile());
-//            BufferedWriter bw = new BufferedWriter(fw);
-//            bw.write(content);
-//            bw.close();
-//
-//            System.out.println("Done");
-//
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
+        String[] modules = infos.getInfos();
+        infos.writeToFile(modules);
     }
 
 
