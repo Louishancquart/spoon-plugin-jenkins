@@ -44,7 +44,7 @@ public class InfoGetter {
             listener.getLogger().println("\t Java Version   : " + pom.getJavaVersion("maven-compiler-plugin"));
         }
 
-        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("PMD").toString());
+        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("pmd").toString());
         listener.getLogger().println("\t Has checkstyle     : " + pom.hasPlugin("checkstyle").toString());
 
         try {
