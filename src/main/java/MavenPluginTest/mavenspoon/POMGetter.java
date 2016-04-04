@@ -22,7 +22,7 @@ import java.io.IOException;
  */
 public class POMGetter {
 
-    private final FilePath workspace;
+    public final FilePath workspace;
     private static final String BUILD_FILE = "pom.xml";
 
     public POMGetter(FilePath workspace) {
@@ -113,6 +113,38 @@ public class POMGetter {
         return info.contains(pluginArtifactId);
     }
 
+    public Boolean hasNode(String node) {
+
+        String info = null;
+        Document document = null;
+
+        try {
+            document = getPom(workspace);
+        } catch (InvalidBuildFileFormatException | IOException e) {
+            e.printStackTrace();
+        }
+
+        XPath xPath = XPathFactory.newInstance().newXPath();
+        XPathExpression expression;
+        try {
+            expression = xPath.compile("/project/"+node+"/");
+            info = expression.evaluate(document);
+
+        } catch (XPathExpressionException e) {
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(document.getBaseURI()
+                        + " is not a valid POM file.");
+            } catch (InvalidBuildFileFormatException e1) {
+                e1.printStackTrace();
+            }
+
+        }
+
+        return info == null || info.length() == 0;
+    }
+
+
 
     public String getJavaVersion(String pluginArtifactId) {
 
@@ -155,7 +187,7 @@ public class POMGetter {
         return info;
     }
 
-    private Document getPom(FilePath workspace)
+    public Document getPom(FilePath workspace)
             throws InvalidBuildFileFormatException, IOException {
 
         FilePath pom;
@@ -192,7 +224,7 @@ public class POMGetter {
         return pomDocument;
     }
 
-    private static class InvalidBuildFileFormatException extends Exception {
+    public static class InvalidBuildFileFormatException extends Exception {
         public InvalidBuildFileFormatException(String message) {
             super(message);
         }

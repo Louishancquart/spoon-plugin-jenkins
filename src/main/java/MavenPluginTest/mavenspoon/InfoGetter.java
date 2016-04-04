@@ -3,10 +3,7 @@ package MavenPluginTest.mavenspoon;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.StringWriter;
+import java.io.*;
 
 /**
  * Created by Louis on 04.03.16.
@@ -44,7 +41,7 @@ public class InfoGetter {
             listener.getLogger().println("\t Java Version   : " + pom.getJavaVersion("maven-compiler-plugin"));
         }
 
-        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("PMD").toString());
+        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("pmd").toString());
         listener.getLogger().println("\t Has checkstyle     : " + pom.hasPlugin("checkstyle").toString());
 
         try {
@@ -88,14 +85,19 @@ public class InfoGetter {
                     "    </tr>\n");
         }
 
-        str = str.append(" </table> \n </section>\n");
+        str.append(" </table> \n </section>\n");
 
 
         try {
 
-            File file = new File("target/spoon-reports/", "result-spoon.xml");
-            if (file.mkdirs()) {
+            File file = new File("target/spoon-reports/");
+            if (!file.mkdirs()) {
                 listener.getLogger().println("dirs 'target/spoon-reports/' not created");
+            }
+
+            file = new File("target/spoon-reports/","result-spoon.txt");
+            if (!file.createNewFile()) {
+                listener.getLogger().println("file \"result-spoon.txt\" not created");
             }
 
             if (!file.exists()) {
@@ -106,12 +108,19 @@ public class InfoGetter {
             }
 
             sw = new StringWriter();
-            bw = new BufferedWriter(sw);
+            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+            StringBuffer sb = sw.getBuffer();
+//            bw.write(sb.toString());
             bw.write(str.toString());
             bw.flush();
-            StringBuffer sb = sw.getBuffer();
+
+//            BufferedWriter bwriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+//            bwriter.write(str.toString());
 
             listener.getLogger().println(sb);
+
+//            //Close writer
+//            writer.close();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -121,6 +130,8 @@ public class InfoGetter {
                 sw.close();
             if (bw != null)
                 bw.close();
+
+
         }
     }
 

@@ -75,6 +75,14 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
         String[] modules = infos.getInfos();
         infos.writeToFile(modules);
+
+        //insert spoon-plugin in the pom of the project
+//        POMModifier pm = new POMModifier(new POMGetter(workspace), listener, build);
+
+        //take the time
+        // run the project
+        // take the time
+        //publish infos
     }
 
 
