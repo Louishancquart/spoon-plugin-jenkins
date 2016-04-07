@@ -136,7 +136,6 @@ public class POMModifier {
         StringWriter sw = null;
         BufferedWriter bw = null;
 
-        
 
         try {
             FilePath pomfile = new FilePath(workspace, "pom.xml");
