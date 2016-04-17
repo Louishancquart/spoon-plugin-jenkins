@@ -46,6 +46,11 @@ public class InfoGetter {
 
         try {
             listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
+
+
+            listener.getLogger().println("\t Workspace : " +build.getEnvironment(listener).get("WORKSPACE"));
+
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
@@ -58,7 +63,7 @@ public class InfoGetter {
 
 
 
-    public void writeToFile(String[] modules) throws IOException {
+    public void writeToFile(String[] modules) throws IOException, InterruptedException {
 
         String idVersionGit = null;
         try {
@@ -67,27 +72,29 @@ public class InfoGetter {
             e.printStackTrace();
         }
 
-        StringWriter sw = null;
-        BufferedWriter bw = null;
+        StringBuffer sb = new StringBuffer();
 
-        StringBuilder str = new StringBuilder("<section name=\"\">\n" +
-                        "  <table>\n"+
+        sb.append("<section name=\"\">\n" +
+                "  <table>\n" +
                 "    <tr>\n" +
                 "      <td fontattribute=\"bold\">Module</td>\n" +
                 "      <td fontattribute=\"bold\"></td>\n" +
                 "    </tr>\n");
 
-
-        for ( String module : modules){
-            str.append("    <tr>\n" +
-                    "      <td>"+module+"</td>\n" +
-                    "      <td>"+idVersionGit+"</td>\n" +
+        for (String module : modules) {
+            sb.append("    <tr>\n" +
+                    "      <td>" + module + "</td>\n" +
+                    "      <td>" + idVersionGit + "</td>\n" +
                     "    </tr>\n");
         }
 
-        str.append(" </table> \n </section>\n");
+
+        sb.append(" </table> \n </section>\n");
 
 
+        BufferedWriter bw = null;
+        OutputStreamWriter osw = null;
+        FileOutputStream fos = null;
         try {
 
             File file = new File("target/spoon-reports/");
@@ -95,7 +102,7 @@ public class InfoGetter {
                 listener.getLogger().println("dirs 'target/spoon-reports/' not created");
             }
 
-            file = new File("target/spoon-reports/","result-spoon.txt");
+            file = new File(build.getEnvironment(listener).get("WORKSPACE")+"/target/spoon-reports/", "result-spoon.txt");
             if (!file.createNewFile()) {
                 listener.getLogger().println("file \"result-spoon.txt\" not created");
             }
@@ -107,11 +114,11 @@ public class InfoGetter {
                 }
             }
 
-            sw = new StringWriter();
-            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-            StringBuffer sb = sw.getBuffer();
-//            bw.write(sb.toString());
-            bw.write(str.toString());
+            fos = new FileOutputStream(file);
+            osw = new OutputStreamWriter(fos, "UTF-8");
+
+            bw = new BufferedWriter(osw);
+            bw.write(sb.toString());
             bw.flush();
 
 //            BufferedWriter bwriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
@@ -119,19 +126,16 @@ public class InfoGetter {
 
             listener.getLogger().println(sb);
 
-//            //Close writer
-//            writer.close();
-
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             // releases any system resources associated with the stream
-            if (sw != null)
-                sw.close();
             if (bw != null)
                 bw.close();
-
-
+            if (osw != null)
+                osw.close();
+            if (fos != null)
+                fos.close();
         }
     }
 

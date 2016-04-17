@@ -12,7 +12,10 @@ import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -70,18 +73,35 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         */
     @Override
-    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) throws IOException {
+    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener) throws IOException, InterruptedException {
 
         InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
         String[] modules = infos.getInfos();
         infos.writeToFile(modules);
 
         //insert spoon-plugin in the pom of the project
-//        POMModifier pm = new POMModifier(new POMGetter(workspace), listener, build);
+        POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace,build);
+        try {
+            if(!pm.insertSpoonPlugin()){
+                listener.getLogger().println("\n\n insertion Failed ! \n\n");
+            }
+        } catch (ParserConfigurationException e) {
+            e.printStackTrace();
+        } catch (SAXException e) {
+            e.printStackTrace();
+        } catch (TransformerException e) {
+            e.printStackTrace();
+        } catch (POMGetter.InvalidBuildFileFormatException e) {
+            e.printStackTrace();
+        }
 
         //take the time
+
+        //build.doBuildTimestamp();
+
         // run the project
         // take the time
+        //build.doBuildTimestamp();
         //publish infos
     }
 
