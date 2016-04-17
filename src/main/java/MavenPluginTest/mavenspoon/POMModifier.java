@@ -43,7 +43,7 @@ public class POMModifier {
 
         Document doc = pom.getPom(this.workspace);
 
-        //debug
+    
         p = doc.createElement("build");
         nodes = doc.getElementsByTagName("project");
 
