@@ -1,6 +1,7 @@
 package MavenPluginTest.mavenspoon;
 
 import hudson.FilePath;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -21,14 +22,16 @@ public class POMModifier {
     private final POMGetter pom;
     private final TaskListener listener;
     private final FilePath workspace;
+    private final Run<?, ?> build;
     private Element p;
     private NodeList nodes;
-//    private Node newNode;
+    private Node newNode;
 
-    public POMModifier(POMGetter pomGetter, TaskListener listener, FilePath worspace) {
+    public POMModifier(POMGetter pomGetter, TaskListener listener, FilePath workspace, Run<?, ?> build) {
         this.pom = pomGetter;
         this.listener = listener;
-        this.workspace = worspace;
+        this.workspace = workspace;
+        this.build = build;
 
     }
 
@@ -36,108 +39,76 @@ public class POMModifier {
     protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, POMGetter.InvalidBuildFileFormatException {
 
 
-//        DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();
-//        domFactory.setIgnoringComments(true);
-//        DocumentBuilder builder = domFactory.newDocumentBuilder();
-//        Document doc = builder.parse(new File("pom.xml"));
-
         Document doc = pom.getPom(this.workspace);
 
-    
-        p = doc.createElement("build");
-        nodes = doc.getElementsByTagName("project");
+        //create plugin nodes if doesn't exist
+        if (doc.getElementsByTagName("build").getLength()<1) {
+            p = doc.createElement("build");
+            newNode = doc.getLastChild().appendChild(p);
+        }else{
+            nodes = doc.getElementsByTagName("build");
+            newNode =  nodes.item(0);
+        }
 
-        //        //debug
-        listener.getLogger().println("p "+ p.toString());
-        listener.getLogger().println("node "+nodes.toString());
-        listener.getLogger().println("parent "+nodes.item(0).toString());
-
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0));
-        p = doc.createElement("plugins");
-
-        nodes = doc.getElementsByTagName("build");
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
-
-
-//        //create plugin nodes if doesn't exist
-//        if (!pom.hasNode("build")) {
-//            p = doc.createElement("build");
-//            nodes = doc.getElementsByTagName("project");
-//            //debug
-//            listener.getLogger().println("node1 "+nodes.toString());
-//            listener.getLogger().println("parent1 "+nodes.item(0).toString());
-//
-//            nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
-//        }
-//
-//        if (!pom.hasNode("plugins")) {
-//            p = doc.createElement("plugins");
-//            nodes = doc.getElementsByTagName("build");
-//
-//            //debug
-//            listener.getLogger().println("node2 "+nodes.toString());
-//            listener.getLogger().println("parent2 "+nodes.item(0).toString());
-//
-//            nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
-//        }
+        if (doc.getElementsByTagName("plugins").getLength()<1) {
+            p = doc.createElement("plugins");
+            newNode = newNode.appendChild(p);
+        }else{
+            nodes = doc.getElementsByTagName("plugins");
+            newNode =  nodes.item(0);
+        }
 
 //      Add spoon plugin in the DOM
 
 //        <plugin>
         p = doc.createElement("plugin");
-        nodes = doc.getElementsByTagName("plugins");
-
-//        //debug
-//        listener.getLogger().println("node "+nodes.toString());
-//        listener.getLogger().println("parent "+nodes.item(0).toString());
-
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
-        nodes = doc.getElementsByTagName("plugin");
+        newNode = newNode.appendChild(p);
 
 //        <groupId>fr.inria.gforge.spoon</groupId>
         p = doc.createElement("groupId");
         Text innerXML = doc.createTextNode("fr.inria.gforge.spoon");
         p.appendChild(innerXML);
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
+        newNode.appendChild(p);
 
 //        <artifactId>spoon-maven-plugin</artifactId>
         p = doc.createElement("artifactId");
         innerXML = doc.createTextNode("spoon-maven-plugin");
         p.appendChild(innerXML);
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(1));
+        newNode.appendChild(p);
 
 //        <version>2.2</version>
         p = doc.createElement("version");
         innerXML = doc.createTextNode("2.2");
         p.appendChild(innerXML);
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(2));
+        newNode.appendChild(p);
 
 //        <executions>
         p = doc.createElement("executions");
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
+        newNode = newNode.appendChild(p);
 
 //        <execution>
-        nodes = doc.getElementsByTagName("executions");
         p = doc.createElement("execution");
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
+        newNode = newNode.appendChild(p);
 
 //        <phase>generate-sources</phase>
-        nodes = doc.getElementsByTagName("execution");
         p = doc.createElement("phase");
         innerXML = doc.createTextNode("generate-sources");
         p.appendChild(innerXML);
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
+        newNode.appendChild(p);
+
 
 //        <goals>
         p = doc.createElement("goals");
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(1));
+        newNode = newNode.appendChild(p);
+
 
 //        <goal>generate</goal>
-        nodes = doc.getElementsByTagName("goals");
         p = doc.createElement("goal");
         innerXML = doc.createTextNode("generate");
         p.appendChild(innerXML);
-        nodes.item(0).getParentNode().insertBefore(p, nodes.item(0).getFirstChild());
+        newNode.appendChild(p);
+
+        doc.normalizeDocument();
 
 
 //      Get the XML to string
@@ -155,49 +126,48 @@ public class POMModifier {
 
 //      Write XML in the file
 
-        writeToFile(xmlOutput);
+        try {
+            writeToFile(xmlOutput);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+
 
         return true;
     }
 
-    public void writeToFile(String source) throws IOException {
+    public void writeToFile(String source) throws IOException, InterruptedException {
 
-        StringWriter sw = null;
-        BufferedWriter bw = null;
+       BufferedWriter bw = null;
 
 
         try {
-            FilePath pomfile = new FilePath(workspace, "pom.xml");
 
-            File file = new File(String.valueOf(pomfile)); // A tester ..
+            FilePath pomfile = new FilePath(workspace, "pom.xml");
+            File file = new File( build.getEnvironment(listener).get("WORKSPACE")+"\\"+pomfile.getName());
+
             if (!file.delete()) {
-                listener.getLogger().println("new pom not created");
+                listener.getLogger().println("new pom not deleted");
             } else if (!file.createNewFile()) {
                 listener.getLogger().println("new pom not created");
             }
-
-
-            sw = new StringWriter();
+             
             bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-            StringBuffer sb = sw.getBuffer();
-            bw.write(sb.toString());
+
+            bw.write(source);
             bw.flush();
 
-
-            listener.getLogger().println(sb);
-
+            listener.getLogger().println(source);
 
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             // releases any system resources associated with the stream
-            if (sw != null)
-                sw.close();
-            if (bw != null)
+            if (bw != null) {
                 bw.close();
-
-
+            }
         }
     }
-
 }

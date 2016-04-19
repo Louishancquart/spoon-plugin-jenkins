@@ -113,36 +113,36 @@ public class POMGetter {
         return info.contains(pluginArtifactId);
     }
 
-    public Boolean hasNode(String node) {
-
-        String info = null;
-        Document document = null;
-
-        try {
-            document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
-            e.printStackTrace();
-        }
-
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        XPathExpression expression;
-        try {
-            expression = xPath.compile("/project/"+node+"/");
-            info = expression.evaluate(document);
-
-        } catch (XPathExpressionException e) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(document.getBaseURI()
-                        + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
-                e1.printStackTrace();
-            }
-
-        }
-
-        return info == null || info.length() == 0;
-    }
+//    public Boolean hasNode(String node) {
+//
+//        String info = null;
+//        Document document = null;
+//
+//        try {
+//            document = getPom(workspace);
+//        } catch (InvalidBuildFileFormatException | IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        XPath xPath = XPathFactory.newInstance().newXPath();
+//        XPathExpression expression;
+//        try {
+//            expression = xPath.compile("/project/"+node+"/");
+//            info = expression.evaluate(document);
+//
+//        } catch (XPathExpressionException e) {
+//            try {
+//                assert document != null;
+//                throw new InvalidBuildFileFormatException(document.getBaseURI()
+//                        + " is not a valid POM file.");
+//            } catch (InvalidBuildFileFormatException e1) {
+//                e1.printStackTrace();
+//            }
+//
+//        }
+//
+//        return info == null || info.length() == 0;
+//    }
 
 
 
