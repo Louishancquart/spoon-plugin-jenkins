@@ -153,7 +153,7 @@ public class POMModifier {
             } else if (!file.createNewFile()) {
                 listener.getLogger().println("new pom not created");
             }
-             
+
             bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
 
             bw.write(source);

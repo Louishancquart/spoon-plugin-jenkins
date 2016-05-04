@@ -2,6 +2,7 @@ package MavenPluginTest.mavenspoon;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import jenkins.model.Jenkins;
 
 import java.io.*;
 
@@ -77,15 +78,23 @@ public class InfoGetter {
         sb.append("<section name=\"\">\n" +
                 "  <table>\n" +
                 "    <tr>\n" +
-                "      <td fontattribute=\"bold\">Module</td>\n" +
-                "      <td fontattribute=\"bold\"></td>\n" +
+                "       <td fontattribute=\"bold\">Module</td>\n" +
+                "       <td fontattribute=\"bold\"></td>\n" +
+                "       <td fontattribute=\"bold\">Project spooned compiles</td>\n" +
+                "       <td fontattribute=\"bold\">Project spooned tests run</td>\n" +
+                "       <td fontattribute=\"bold\">Time to spoon</td>\n" +
                 "    </tr>\n");
 
         for (String module : modules) {
             sb.append("    <tr>\n" +
                     "      <td>" + module + "</td>\n" +
                     "      <td>" + idVersionGit + "</td>\n" +
+                    "      <td>" + idVersionGit + "</td>\n" +
+                    "      <td>" + idVersionGit + "</td>\n" +
+                    "      <td>" + idVersionGit + "</td>\n" +
                     "    </tr>\n");
+
+//            Jenkins.getInstance().getItem("jrt").g
         }
 
 
@@ -93,8 +102,8 @@ public class InfoGetter {
 
 
         BufferedWriter bw = null;
-        OutputStreamWriter osw = null;
-        FileOutputStream fos = null;
+//        OutputStreamWriter osw = null;
+//        FileOutputStream fos = null;
         try {
 
             File file = new File("target/spoon-reports/");
@@ -114,15 +123,11 @@ public class InfoGetter {
                 }
             }
 
-            fos = new FileOutputStream(file);
-            osw = new OutputStreamWriter(fos, "UTF-8");
 
-            bw = new BufferedWriter(osw);
+            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
+
             bw.write(sb.toString());
             bw.flush();
-
-//            BufferedWriter bwriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
-//            bwriter.write(str.toString());
 
             listener.getLogger().println(sb);
 
@@ -132,10 +137,10 @@ public class InfoGetter {
             // releases any system resources associated with the stream
             if (bw != null)
                 bw.close();
-            if (osw != null)
-                osw.close();
-            if (fos != null)
-                fos.close();
+//            if (osw != null)
+//                osw.close();
+//            if (fos != null)
+//                fos.close();
         }
     }
 
