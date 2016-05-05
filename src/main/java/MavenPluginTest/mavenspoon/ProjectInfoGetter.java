@@ -42,7 +42,7 @@ import java.io.StringWriter;
  *
  * @author Kohsuke Kawaguchi
  */
-public class ProjectInfoGetter extends Publisher implements SimpleBuildStep {
+public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
     // private final String name;
 
@@ -86,7 +86,12 @@ public class ProjectInfoGetter extends Publisher implements SimpleBuildStep {
 
         //get pre spoon infos about the build
         InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
-        String[] modules = infos.getInfos();
+        String[] modules = new String[0];
+        try {
+            modules = infos.getInfos();
+        } catch (InvalidBuildFileFormatException e) {
+            e.printStackTrace();
+        }
         infos.writeToFile(modules);
 
         //insert spoon-plugin in the pom of the project
@@ -95,7 +100,7 @@ public class ProjectInfoGetter extends Publisher implements SimpleBuildStep {
             if (!pm.insertSpoonPlugin()) {
                 listener.getLogger().println("\n\n insertion Failed ! \n\n");
             }
-        } catch (ParserConfigurationException | POMGetter.InvalidBuildFileFormatException | TransformerException | SAXException e) {
+        } catch (ParserConfigurationException | TransformerException | SAXException | InvalidBuildFileFormatException e) {
             e.printStackTrace();
         }
 
@@ -133,7 +138,7 @@ public class ProjectInfoGetter extends Publisher implements SimpleBuildStep {
      * for the actual HTML fragment for the configuration screen.
      */
     @Extension // This indicates to Jenkins that this is an implementation of an extension point.
-    public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+    public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
 
         /**
          * In order to load the persisted global configuration, you have to

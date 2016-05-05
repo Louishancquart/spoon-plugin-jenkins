@@ -2,9 +2,9 @@ package MavenPluginTest.mavenspoon;
 
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import jenkins.model.Jenkins;
 
 import java.io.*;
+import java.lang.AutoCloseable;
 
 /**
  * Created by Louis on 04.03.16.
@@ -24,7 +24,7 @@ public class InfoGetter {
      * Get POM infos
      * @return module list
      */
-    public String[] getInfos(){
+    public String[] getInfos() throws IOException, InterruptedException, InvalidBuildFileFormatException {
 
         //infos projet
         listener.getLogger().println("\t Actifact ID        : " + pom.getInfo("artifactId"));
@@ -45,18 +45,11 @@ public class InfoGetter {
         listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("pmd").toString());
         listener.getLogger().println("\t Has checkstyle     : " + pom.hasPlugin("checkstyle").toString());
 
-        try {
-            listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
+        listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
 
 
-            listener.getLogger().println("\t Workspace : " +build.getEnvironment(listener).get("WORKSPACE"));
+        listener.getLogger().println("\t Workspace : " +build.getEnvironment(listener).get("WORKSPACE"));
 
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
 
         //return a module list
         return modules.split("\\\\r?\\\\n");
@@ -67,11 +60,8 @@ public class InfoGetter {
     public void writeToFile(String[] modules) throws IOException, InterruptedException {
 
         String idVersionGit = null;
-        try {
-            idVersionGit = build.getEnvironment(listener).get("GIT_COMMIT");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        idVersionGit = build.getEnvironment(listener).get("GIT_COMMIT");
+
 
         StringBuffer sb = new StringBuffer();
 
@@ -85,6 +75,8 @@ public class InfoGetter {
                 "       <td fontattribute=\"bold\">Time to spoon</td>\n" +
                 "    </tr>\n");
 
+
+        //TODO: add proper info
         for (String module : modules) {
             sb.append("    <tr>\n" +
                     "      <td>" + module + "</td>\n" +
@@ -93,20 +85,16 @@ public class InfoGetter {
                     "      <td>" + idVersionGit + "</td>\n" +
                     "      <td>" + idVersionGit + "</td>\n" +
                     "    </tr>\n");
-
-//            Jenkins.getInstance().getItem("jrt").g
         }
 
 
         sb.append(" </table> \n </section>\n");
 
 
-        BufferedWriter bw = null;
-//        OutputStreamWriter osw = null;
-//        FileOutputStream fos = null;
-        try {
+        File file = new File("target/spoon-reports/");
 
-            File file = new File("target/spoon-reports/");
+        try ( BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+
             if (!file.mkdirs()) {
                 listener.getLogger().println("dirs 'target/spoon-reports/' not created");
             }
@@ -117,30 +105,18 @@ public class InfoGetter {
             }
 
             if (!file.exists()) {
-                listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath().toString() + "\n\n");
+                listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath() + "\n\n");
                 if (!file.createNewFile()) {
                     listener.getLogger().println("file not created");
                 }
             }
 
 
-            bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"));
 
             bw.write(sb.toString());
             bw.flush();
 
             listener.getLogger().println(sb);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            // releases any system resources associated with the stream
-            if (bw != null)
-                bw.close();
-//            if (osw != null)
-//                osw.close();
-//            if (fos != null)
-//                fos.close();
         }
     }
 

@@ -29,133 +29,71 @@ public class POMGetter {
         this.workspace = workspace;
     }
 
-    public String getInfo(String expression_to_compile) {
+    public String getInfo(String expressionToCompile) throws InvalidBuildFileFormatException, IOException {
 
 
         String info = null;
 
-        Document document = null;
-        try {
-            document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
-            e.printStackTrace();
-        }
+        Document document = getPom(workspace);
+
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
+
         try {
-            expression = xPath.compile("/project/"+expression_to_compile);
+            expression = xPath.compile("/project/"+expressionToCompile);
             info = expression.evaluate(document);
 
         } catch (XPathExpressionException e) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(document.getBaseURI()
+            assert document != null;
+            throw new InvalidBuildFileFormatException(document.getBaseURI()
                         + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
-                e1.printStackTrace();
-            }
-
-
         }
 
         if (info == null || info.length() == 0) {
-            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(
                         "No info information found in " + document.getBaseURI());
-            } catch (InvalidBuildFileFormatException e) {
-                e.printStackTrace();
-            }
         }
         return info;
     }
 
 
-    public Boolean hasPlugin(String pluginArtifactId) {
+    public Boolean hasPlugin(String pluginArtifactId) throws InvalidBuildFileFormatException, IOException {
 
         String info = null;
         Document document = null;
 
-        try {
-            document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
-            e.printStackTrace();
-        }
+
+        document = getPom(workspace);
+
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
         try {
             expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']");
             info = expression.evaluate(document);
-
         } catch (XPathExpressionException e) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(document.getBaseURI()
-                        + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
-                e1.printStackTrace();
-            }
-
-
+            assert document != null;
+            throw new InvalidBuildFileFormatException(document.getBaseURI()
+                    + " is not a valid POM file.");
         }
 
         if (info == null || info.length() == 0) {
-            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(
                         "No info information found in " + document.getBaseURI());
-            } catch (InvalidBuildFileFormatException e) {
-                e.printStackTrace();
-            }
         }
         return info.contains(pluginArtifactId);
     }
 
-//    public Boolean hasNode(String node) {
-//
-//        String info = null;
-//        Document document = null;
-//
-//        try {
-//            document = getPom(workspace);
-//        } catch (InvalidBuildFileFormatException | IOException e) {
-//            e.printStackTrace();
-//        }
-//
-//        XPath xPath = XPathFactory.newInstance().newXPath();
-//        XPathExpression expression;
-//        try {
-//            expression = xPath.compile("/project/"+node+"/");
-//            info = expression.evaluate(document);
-//
-//        } catch (XPathExpressionException e) {
-//            try {
-//                assert document != null;
-//                throw new InvalidBuildFileFormatException(document.getBaseURI()
-//                        + " is not a valid POM file.");
-//            } catch (InvalidBuildFileFormatException e1) {
-//                e1.printStackTrace();
-//            }
-//
-//        }
-//
-//        return info == null || info.length() == 0;
-//    }
 
-
-
-    public String getJavaVersion(String pluginArtifactId) {
+    public String getJavaVersion(String pluginArtifactId) throws InvalidBuildFileFormatException, IOException {
 
         String info = null;
         Document document = null;
 
-        try {
-            document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
-            e.printStackTrace();
-        }
+        document = getPom(workspace);
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
@@ -164,25 +102,15 @@ public class POMGetter {
             info = expression.evaluate(document);
 
         } catch (XPathExpressionException e) {
-            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(document.getBaseURI()
                         + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
-                e1.printStackTrace();
-            }
-
-
         }
 
         if (info == null || info.length() == 0) {
-            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(
                         "No info information found in " + document.getBaseURI());
-            } catch (InvalidBuildFileFormatException e) {
-                e.printStackTrace();
-            }
         }
         return info;
     }
@@ -224,9 +152,4 @@ public class POMGetter {
         return pomDocument;
     }
 
-    public static class InvalidBuildFileFormatException extends Exception {
-        public InvalidBuildFileFormatException(String message) {
-            super(message);
-        }
-    }
 }

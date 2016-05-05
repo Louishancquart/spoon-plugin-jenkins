@@ -16,16 +16,13 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
 /**
- * Created by SDS-PCSS on 2016-04-01.
+ * Created by Louis Hancquart on 2016-04-01.
  */
 public class POMModifier {
     private final POMGetter pom;
     private final TaskListener listener;
     private final FilePath workspace;
     private final Run<?, ?> build;
-    private Element p;
-    private NodeList nodes;
-    private Node newNode;
 
     public POMModifier(POMGetter pomGetter, TaskListener listener, FilePath workspace, Run<?, ?> build) {
         this.pom = pomGetter;
@@ -36,12 +33,16 @@ public class POMModifier {
     }
 
 
-    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, POMGetter.InvalidBuildFileFormatException {
+    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidBuildFileFormatException {
 
 
         Document doc = pom.getPom(this.workspace);
 
         //create plugin nodes if doesn't exist
+        Element p;
+        Node newNode;
+        NodeList nodes;
+
         if (doc.getElementsByTagName("build").getLength()<1) {
             p = doc.createElement("build");
             newNode = doc.getLastChild().appendChild(p);
