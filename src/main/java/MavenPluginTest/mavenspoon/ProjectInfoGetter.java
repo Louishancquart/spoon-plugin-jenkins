@@ -68,8 +68,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
 
     /*
-
-
         /**
         * We'll use this from the <tt>config.jelly</tt>.
         * /
@@ -85,14 +83,18 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
 
         //get pre spoon infos about the build
-        InfoGetter infos = new InfoGetter(new POMGetter(workspace), listener, build);
+        InfoGetter infos = new InfoGetter(new POMGetter(workspace),workspace, listener, build);
         String[] modules = new String[0];
         try {
             modules = infos.getInfos();
         } catch (InvalidBuildFileFormatException e) {
             e.printStackTrace();
         }
-        infos.writeToFile(modules);
+        try {
+            infos.writeToFile(modules);
+        } catch (InvalidBuildFileFormatException e) {
+            e.printStackTrace();
+        }
 
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace, build);
@@ -103,27 +105,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         } catch (ParserConfigurationException | TransformerException | SAXException | InvalidBuildFileFormatException e) {
             e.printStackTrace();
         }
-
-
-//        listener.getLogger().println("\n\n BUILD succeed : " + build.getResult().toString());
-//
-//    listener.getLogger().println("\n\n BUILD time : " + build.getDurationString());
-//    listener.getLogger().println("\n\n BUILD tests : " + build.getLogText().toString());
-
-
-//        build.getResult();
-//        build.getDurationString();
-
-        //take the time
-        // build.doBuildTimestamp();
-
-
-        // run the project
-
-        // take the time
-        // build.doBuildTimestamp();
-
-       //publish infos
     }
 
 
