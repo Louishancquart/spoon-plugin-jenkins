@@ -89,12 +89,13 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
             modules = infos.getInfos();
         } catch (InvalidBuildFileFormatException e) {
             e.printStackTrace();
+            listener.getLogger().println("\n\n info Reading  Failed ! \n\n");
         }
-        try {
-            infos.writeToFile(modules);
-        } catch (InvalidBuildFileFormatException e) {
-            e.printStackTrace();
+        for( String m : modules){
+            listener.getLogger().println("\n\n MODULE: "+m+"! \n\n");
         }
+        infos.writeToFile(modules);
+
 
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace, build);

@@ -3,6 +3,6 @@
   This view is used to render the installed plugins page.
 -->
 <div>
-   Project Info Getter
+   Spoon Jenkins Plugin
    The aim of this plugin is to compiles an open-source project and spoons the project
 </div>

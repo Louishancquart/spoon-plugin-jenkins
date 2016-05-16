@@ -122,7 +122,7 @@ public class POMModifier {
         transformer.transform(source, result);
 
         String xmlOutput = result.getWriter().toString();
-        listener.getLogger().println(xmlOutput);
+//        listener.getLogger().println(xmlOutput);
 
 
 //      Write XML in the file
@@ -160,7 +160,7 @@ public class POMModifier {
             bw.write(source);
             bw.flush();
 
-            listener.getLogger().println(source);
+//            listener.getLogger().println(source);
 
         } catch (IOException e) {
             e.printStackTrace();

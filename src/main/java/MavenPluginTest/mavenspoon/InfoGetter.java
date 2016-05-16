@@ -8,6 +8,7 @@ import org.jenkinsci.remoting.RoleChecker;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -51,7 +52,8 @@ public class InfoGetter {
 
 
         listener.getLogger().println("\n PLUGINS: ");
-        Boolean mc = pom.hasPlugin("maven-compiler-plugin");
+
+            Boolean mc = pom.hasPlugin("maven-compiler-plugin");
         listener.getLogger().println("\t Has Maven Compiler : " + mc.toString());
         if (mc) {
             listener.getLogger().println("\t Java Version   : " + pom.getJavaVersion("maven-compiler-plugin"));
@@ -65,13 +67,13 @@ public class InfoGetter {
 
         listener.getLogger().println("\t Workspace : " + build.getEnvironment(listener).get("WORKSPACE"));
 
-
+        listener.getLogger().println("");
         //return a module list
-        return modules.split("\\\\r?\\\\n");
+        return modules.trim().split("\\n");
     }
 
 
-    public void writeToFile(String[] modules) throws IOException, InterruptedException, InvalidBuildFileFormatException {
+    public void writeToFile(String[] modules) throws IOException, InterruptedException {
 
         String idVersionGit = build.getEnvironment(listener).get("GIT_COMMIT");
 
@@ -87,7 +89,10 @@ public class InfoGetter {
                 "    </tr>\n");
 
 
+
+
         for (String module : modules) {
+            module = module.replaceAll("\\s+","");
 
             sb.append("    <tr>\n");
             sb.append("      <td>");
@@ -96,16 +101,25 @@ public class InfoGetter {
             sb.append("      <td>");
             sb.append(idVersionGit);
             sb.append("</td>\n");
-            sb.append("      <td> Project Compilation");
+            sb.append("      <td>");
 
-            String temp = build.getResult().toString();
+            String temp;
+            if(build.getResult() == null){
+                temp = "KO";
+            }else{
+                temp = "OK";
+            }
             sb.append(temp);
             sb.append("</td>\n");
             sb.append("      <td>");
-            sb.append(getTestsInfos(module));
+            try {
+                sb.append(getTestsInfos(module));
+            } catch (InvalidBuildFileFormatException e) {
+                e.printStackTrace();
+            }
             sb.append("</td>\n");
             sb.append("      <td>");
-            sb.append(build.getDurationString());
+            sb.append(build.getDurationString().replaceAll("and counting", ""));
             sb.append("</td>\n");
             sb.append("    </tr>\n");
         }
@@ -114,27 +128,26 @@ public class InfoGetter {
         sb.append(" </table> \n </section>\n");
 
 
-        File file = new File("target/spoon-reports/");
+        File file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports/");
+
+        if (!file.mkdirs()) {
+            listener.getLogger().println("dirs 'target/spoon-reports/' not created");
+        }
+
+        file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.txt");
+        listener.getLogger().println(" file:"+ file.getAbsolutePath());
+        if (!file.createNewFile()) {
+            listener.getLogger().println("file \"result-spoon.txt\" not created");
+        }
+
+        if (!file.exists()) {
+            listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath() + "\n\n");
+            if (!file.createNewFile()) {
+                listener.getLogger().println("file not created");
+            }
+        }
 
         try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
-
-            if (!file.mkdirs()) {
-                listener.getLogger().println("dirs 'target/spoon-reports/' not created");
-            }
-
-            file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports/", "result-spoon.txt");
-            if (!file.createNewFile()) {
-                listener.getLogger().println("file \"result-spoon.txt\" not created");
-            }
-
-            if (!file.exists()) {
-                listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath() + "\n\n");
-                if (!file.createNewFile()) {
-                    listener.getLogger().println("file not created");
-                }
-            }
-
-
             bw.write(sb.toString());
             bw.flush();
 
@@ -143,34 +156,43 @@ public class InfoGetter {
     }
 
     public String getTestsInfos(String module)
-            throws InvalidBuildFileFormatException, IOException, InterruptedException {
+            throws IOException, InterruptedException, InvalidBuildFileFormatException {
 
         int tests = 0, errors = 0, skipped = 0, failures = 0;
-
         FilePath dir;
 
-        dir = new FilePath(workspace, module + "commandline/target/surefire-reports");
 
+        dir = new FilePath(workspace, module + "/target/surefire-reports");
+        listener.getLogger().println(" NAME Parent DIR: "+module);
+//        listener.getLogger().println(" DIR list : "+dir.list().toString());
 
         for (FilePath f : dir.list()) {
-            getTestsDocumentFile(f);
+            if( f.getName().endsWith("txt")){
+                break;
+            }else {
+//                listener.getLogger().println(" NAME: "+f.getName());
+                Document doc = getTestsDocumentFile(f);
 
-            //get test results parsing
-            tests += getTestsResults("tests");
-            errors += getTestsResults("errors");
-            skipped += getTestsResults("skipped");
-            failures += getTestsResults("failures");
+                //get test results parsing
+                tests += getTestsResults("tests", doc);
+                errors += getTestsResults("errors", doc);
+                skipped += getTestsResults("skipped", doc);
+                failures += getTestsResults("failures", doc);
+            }
         }
 
         return "tests: " + tests + " errors: " + errors + " skipped: " + skipped + " failures: " + failures;
     }
 
-    public int getTestsResults(String attribute) throws InvalidBuildFileFormatException, IOException {
+
+
+
+    public int getTestsResults(String attribute, Document document) throws InvalidBuildFileFormatException, IOException {
 
         int info = -1;
-        Document document = null;
-
-        document = getTestsDocumentFile(workspace);
+//        Document document = null;
+//
+//        document = getTestsDocumentFile(workspace);
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
@@ -194,8 +216,8 @@ public class InfoGetter {
     }
 
 
-    public Document getTestsDocumentFile(FilePath file) throws IOException, InvalidBuildFileFormatException {
-        Document testsDocument;
+    public Document getTestsDocumentFile(FilePath file) throws IOException {
+        Document testsDocument = null;
         try {
             testsDocument = file.act(new FilePath.FileCallable<Document>() {
                 public Document invoke(File file, VirtualChannel channel)
@@ -208,6 +230,9 @@ public class InfoGetter {
                         return documentBuilder.parse(file);
 
                     } catch (SAXException | ParserConfigurationException e) {
+                        listener.getLogger().println(file
+                                .getAbsolutePath()
+                                + " is not a valid Test file.");
                         throw new InterruptedException(file
                                 .getAbsolutePath()
                                 + " is not a valid Test file.");
@@ -223,7 +248,12 @@ public class InfoGetter {
                 )
 
         {
-            throw new InvalidBuildFileFormatException(e.getMessage());
+            try {
+                throw new InvalidBuildFileFormatException(e.getMessage());
+            } catch (InvalidBuildFileFormatException e1) {
+                listener.getLogger().println("InvalidBuildFileFormatException ");
+                e1.printStackTrace();
+            }
         }
 
         return testsDocument;

@@ -33,9 +33,7 @@ public class POMGetter {
 
 
         String info = null;
-
         Document document = getPom(workspace);
-
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
@@ -61,30 +59,47 @@ public class POMGetter {
 
     public Boolean hasPlugin(String pluginArtifactId) throws InvalidBuildFileFormatException, IOException {
 
+        if(pluginArtifactId == null){
+            pluginArtifactId = "";
+        }
+
         String info = null;
         Document document = null;
 
-
-        document = getPom(workspace);
-
+        try {
+            document = getPom(workspace);
+        } catch (InvalidBuildFileFormatException | IOException e) {
+            e.printStackTrace();
+        }
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
         try {
             expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']");
             info = expression.evaluate(document);
+
         } catch (XPathExpressionException e) {
-            assert document != null;
-            throw new InvalidBuildFileFormatException(document.getBaseURI()
-                    + " is not a valid POM file.");
+            try {
+                assert document != null;
+                throw new InvalidBuildFileFormatException(document.getBaseURI()
+                        + " is not a valid POM file.");
+            } catch (InvalidBuildFileFormatException e1) {
+                e1.printStackTrace();
+            }
         }
 
         if (info == null || info.length() == 0) {
+            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(
                         "No info information found in " + document.getBaseURI());
+            } catch (InvalidBuildFileFormatException e) {
+                e.printStackTrace();
+            }
+        }else {
+            return info.contains(pluginArtifactId);
         }
-        return info.contains(pluginArtifactId);
+        return false;
     }
 
 
@@ -93,7 +108,11 @@ public class POMGetter {
         String info = null;
         Document document = null;
 
-        document = getPom(workspace);
+        try {
+            document = getPom(workspace);
+        } catch (InvalidBuildFileFormatException | IOException e) {
+            e.printStackTrace();
+        }
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
@@ -102,15 +121,25 @@ public class POMGetter {
             info = expression.evaluate(document);
 
         } catch (XPathExpressionException e) {
+            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(document.getBaseURI()
                         + " is not a valid POM file.");
+            } catch (InvalidBuildFileFormatException e1) {
+                e1.printStackTrace();
+            }
+
+
         }
 
         if (info == null || info.length() == 0) {
+            try {
                 assert document != null;
                 throw new InvalidBuildFileFormatException(
                         "No info information found in " + document.getBaseURI());
+            } catch (InvalidBuildFileFormatException e) {
+                e.printStackTrace();
+            }
         }
         return info;
     }
@@ -127,7 +156,6 @@ public class POMGetter {
             pomDocument = pom.act(new FilePath.FileCallable<Document>() {
                 public Document invoke(File pom, VirtualChannel channel)
                         throws IOException, InterruptedException {
-
                     try {
                         DocumentBuilder documentBuilder;
                         documentBuilder = DocumentBuilderFactory.newInstance()
@@ -140,10 +168,8 @@ public class POMGetter {
                                 + " is not a valid POM file.");
                     }
                 }
-
                 public void checkRoles(RoleChecker arg0) throws SecurityException {
                 }
-
             });
         } catch (InterruptedException e) {
             throw new InvalidBuildFileFormatException(e.getMessage());
