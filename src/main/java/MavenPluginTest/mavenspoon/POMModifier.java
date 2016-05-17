@@ -16,6 +16,8 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
 /**
+ * Insert the spoon plugin in the project pom file
+ *
  * Created by Louis Hancquart on 2016-04-01.
  */
 public class POMModifier {

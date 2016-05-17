@@ -18,7 +18,7 @@ import java.io.IOException;
 
 
 /**
- * This class iis about to get the pom file as a Document and parse this document to gather some piece of information.
+ * This class is about to get the pom file as a Document and parse this document to gather some piece of information.
  * Created by Louis on 01.03.16.
  */
 public class POMGetter {

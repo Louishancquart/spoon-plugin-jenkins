@@ -18,6 +18,7 @@ import javax.xml.xpath.XPathFactory;
 import java.io.*;
 
 /**
+ * Gather infos from pom files and write it on standard out and target/spoon-report/spoon-report.xml
  * Created by Louis Hancquart on 04.03.16.
  */
 public class InfoGetter {
