@@ -32,10 +32,22 @@ public class POMModifier {
 
     }
 
-
-    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidBuildFileFormatException {
-
-
+    /**
+     * Insert the spoon plugin in the project pom file:
+     *
+     * - get the pom file as a Document
+     * - insert the spoon plugin in the data structure
+     * - turn the data structure into a String content
+     * - overwrite the original pom file with the new content
+     *
+     * @return true if the insert is successful
+     * @throws ParserConfigurationException
+     * @throws IOException
+     * @throws SAXException
+     * @throws TransformerException
+     * @throws InvalidFileFormatException
+     */
+    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
         Document doc = pom.getPom(this.workspace);
 
         //create plugin nodes if doesn't exist
@@ -60,7 +72,6 @@ public class POMModifier {
         }
 
 //      Add spoon plugin in the DOM
-
 //        <plugin>
         p = doc.createElement("plugin");
         newNode = newNode.appendChild(p);
@@ -97,11 +108,9 @@ public class POMModifier {
         p.appendChild(innerXML);
         newNode.appendChild(p);
 
-
 //        <goals>
         p = doc.createElement("goals");
         newNode = newNode.appendChild(p);
-
 
 //        <goal>generate</goal>
         p = doc.createElement("goal");
@@ -111,9 +120,7 @@ public class POMModifier {
 
         doc.normalizeDocument();
 
-
 //      Get the XML to string
-
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
         transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
@@ -122,30 +129,27 @@ public class POMModifier {
         transformer.transform(source, result);
 
         String xmlOutput = result.getWriter().toString();
-//        listener.getLogger().println(xmlOutput);
-
 
 //      Write XML in the file
-
         try {
             writeToFile(xmlOutput);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-
-
-
         return true;
     }
 
+    /**
+     * Write the String data into the pom file of the project - erase the previous content
+     *
+     * @param source
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void writeToFile(String source) throws IOException, InterruptedException {
-
        BufferedWriter bw = null;
 
-
         try {
-
             FilePath pomfile = new FilePath(workspace, "pom.xml");
             File file = new File( build.getEnvironment(listener).get("WORKSPACE")+"\\"+pomfile.getName());
 
@@ -160,7 +164,7 @@ public class POMModifier {
             bw.write(source);
             bw.flush();
 
-//            listener.getLogger().println(source);
+            listener.getLogger().println(source);
 
         } catch (IOException e) {
             e.printStackTrace();

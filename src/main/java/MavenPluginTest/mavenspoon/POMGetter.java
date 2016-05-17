@@ -18,20 +18,28 @@ import java.io.IOException;
 
 
 /**
+ * This class iis about to get the pom file as a Document and parse this document to gather some piece of information.
  * Created by Louis on 01.03.16.
  */
 public class POMGetter {
 
     public final FilePath workspace;
     private static final String BUILD_FILE = "pom.xml";
+    public String module = "";
 
     public POMGetter(FilePath workspace) {
         this.workspace = workspace;
     }
 
-    public String getInfo(String expressionToCompile) throws InvalidBuildFileFormatException, IOException {
-
-
+    /**
+     * Look for an info under the root "project" in the pom file
+     *
+     * @param expressionToCompile
+     * @return true if the pom file contains the node entered in parameter
+     * @throws InvalidFileFormatException
+     * @throws IOException
+     */
+    public String getInfo(String expressionToCompile) throws InvalidFileFormatException, IOException {
         String info = null;
         Document document = getPom(workspace);
 
@@ -41,23 +49,28 @@ public class POMGetter {
         try {
             expression = xPath.compile("/project/"+expressionToCompile);
             info = expression.evaluate(document);
-
         } catch (XPathExpressionException e) {
             assert document != null;
-            throw new InvalidBuildFileFormatException(document.getBaseURI()
+            throw new InvalidFileFormatException(document.getBaseURI()
                         + " is not a valid POM file.");
         }
 
         if (info == null || info.length() == 0) {
                 assert document != null;
-                throw new InvalidBuildFileFormatException(
-                        "No info information found in " + document.getBaseURI());
+               info ="";
         }
         return info;
     }
 
-
-    public Boolean hasPlugin(String pluginArtifactId) throws InvalidBuildFileFormatException, IOException {
+    /**
+     * Check if the project has a plugin associated with the artifactId in parameter
+     *
+     * @param pluginArtifactId
+     * @return true if the pom file contains the plugin artifact in parameter
+     * @throws InvalidFileFormatException
+     * @throws IOException
+     */
+    public Boolean hasPlugin(String pluginArtifactId) throws InvalidFileFormatException, IOException {
 
         if(pluginArtifactId == null){
             pluginArtifactId = "";
@@ -68,89 +81,43 @@ public class POMGetter {
 
         try {
             document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
+        } catch (InvalidFileFormatException | IOException e) {
             e.printStackTrace();
         }
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
         try {
-            expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']");
+            expression = xPath.compile("/project/build/plugins/plugin[artifactId = '"+pluginArtifactId+"']");
             info = expression.evaluate(document);
-
         } catch (XPathExpressionException e) {
             try {
                 assert document != null;
-                throw new InvalidBuildFileFormatException(document.getBaseURI()
+                throw new InvalidFileFormatException(document.getBaseURI()
                         + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
+            } catch (InvalidFileFormatException e1) {
                 e1.printStackTrace();
             }
         }
-
-        if (info == null || info.length() == 0) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(
-                        "No info information found in " + document.getBaseURI());
-            } catch (InvalidBuildFileFormatException e) {
-                e.printStackTrace();
-            }
-        }else {
-            return info.contains(pluginArtifactId);
+        if (info == null){
+            return false;
         }
-        return false;
+        return info.length()> 0;
     }
 
-
-    public String getJavaVersion(String pluginArtifactId) throws InvalidBuildFileFormatException, IOException {
-
-        String info = null;
-        Document document = null;
-
-        try {
-            document = getPom(workspace);
-        } catch (InvalidBuildFileFormatException | IOException e) {
-            e.printStackTrace();
-        }
-
-        XPath xPath = XPathFactory.newInstance().newXPath();
-        XPathExpression expression;
-        try {
-            expression = xPath.compile("/project/build/plugins/plugin[artifactId='pluginArtifactId']/configuration/version");
-            info = expression.evaluate(document);
-
-        } catch (XPathExpressionException e) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(document.getBaseURI()
-                        + " is not a valid POM file.");
-            } catch (InvalidBuildFileFormatException e1) {
-                e1.printStackTrace();
-            }
-
-
-        }
-
-        if (info == null || info.length() == 0) {
-            try {
-                assert document != null;
-                throw new InvalidBuildFileFormatException(
-                        "No info information found in " + document.getBaseURI());
-            } catch (InvalidBuildFileFormatException e) {
-                e.printStackTrace();
-            }
-        }
-        return info;
-    }
-
+    /**
+     * get the pom file as a parsable document
+     *
+     * @param workspace
+     * @return the pom file as a Document
+     * @throws InvalidFileFormatException
+     * @throws IOException
+     */
     public Document getPom(FilePath workspace)
-            throws InvalidBuildFileFormatException, IOException {
+            throws InvalidFileFormatException, IOException {
 
         FilePath pom;
-
-        pom = new FilePath(workspace, BUILD_FILE);
-
+        pom = new FilePath(workspace, module+BUILD_FILE);
         Document pomDocument;
         try {
             pomDocument = pom.act(new FilePath.FileCallable<Document>() {
@@ -161,7 +128,6 @@ public class POMGetter {
                         documentBuilder = DocumentBuilderFactory.newInstance()
                                 .newDocumentBuilder();
                         return documentBuilder.parse(pom);
-
                     } catch (SAXException | ParserConfigurationException e) {
                         throw new InterruptedException(pom
                                 .getAbsolutePath()
@@ -172,7 +138,7 @@ public class POMGetter {
                 }
             });
         } catch (InterruptedException e) {
-            throw new InvalidBuildFileFormatException(e.getMessage());
+            throw new InvalidFileFormatException(e.getMessage());
         }
 
         return pomDocument;

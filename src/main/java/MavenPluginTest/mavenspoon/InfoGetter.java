@@ -8,7 +8,6 @@ import org.jenkinsci.remoting.RoleChecker;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -17,7 +16,6 @@ import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 import java.io.*;
-import java.lang.AutoCloseable;
 
 /**
  * Created by Louis Hancquart on 04.03.16.
@@ -38,46 +36,76 @@ public class InfoGetter {
     /**
      * Get POM infos
      *
-     * @return module list
-     */
-    public String[] getInfos() throws IOException, InterruptedException, InvalidBuildFileFormatException {
+     * Gather from the  pom file :
+     *  artifact id
+     *  project version
+     *  Git commit id
+     *
+     *  check presence of the plugins:
+     *      maven-compiler-plugin dependency is used ( if yes : check java version )
+     *      checkstyle
+     *      PMD
 
-        //infos projet
+     */
+    public void printInfos() throws IOException, InterruptedException,InvalidFileFormatException {
         listener.getLogger().println("\t Actifact ID        : " + pom.getInfo("artifactId"));
         listener.getLogger().println("\t Version            : " + pom.getInfo("version"));
 
-        //get  modules list
-        String modules = pom.getInfo("modules");
-        listener.getLogger().println("\t Modules            : " + modules);
-
-
+        //check plugins
         listener.getLogger().println("\n PLUGINS: ");
-
-            Boolean mc = pom.hasPlugin("maven-compiler-plugin");
+        Boolean mc = null;
+        mc = pom.hasPlugin("maven-compiler-plugin");
         listener.getLogger().println("\t Has Maven Compiler : " + mc.toString());
         if (mc) {
-            listener.getLogger().println("\t Java Version   : " + pom.getJavaVersion("maven-compiler-plugin"));
+            listener.getLogger().println("\t Java Version       : " + build.getEnvironment(listener).get("JAVA_HOME"));
         }
+        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("maven-pmd-plugin").toString());
+        listener.getLogger().println("\t Has checkstyle     : " + pom.hasPlugin("maven-checkstyle-plugin").toString());
+        listener.getLogger().println("\t Git Commit id      : " + build.getEnvironment(listener).get("GIT_COMMIT"));
+        listener.getLogger().println("\t Workspace          : " + build.getEnvironment(listener).get("WORKSPACE"));
 
-        listener.getLogger().println("\t Has PMD            : " + pom.hasPlugin("pmd").toString());
-        listener.getLogger().println("\t Has checkstyle     : " + pom.hasPlugin("checkstyle").toString());
 
-        listener.getLogger().println("\t Git Commit id: " + build.getEnvironment(listener).get("GIT_COMMIT"));
-
-
-        listener.getLogger().println("\t Workspace : " + build.getEnvironment(listener).get("WORKSPACE"));
-
-        listener.getLogger().println("");
-        //return a module list
-        return modules.trim().split("\\n");
     }
 
+    /**
+     *Call printInfos() for each modules found in the pom file:
+     *
+     * @return module list
+     * @throws IOException
+     * @throws InvalidFileFormatException
+     * @throws InterruptedException
+     */
+    public String[] getModules() throws IOException, InvalidFileFormatException, InterruptedException {
+        //get  modules list
+        listener.getLogger().println("\t MODULES            : ");
+        String[] modules = pom.getInfo("modules").trim().split("\\n");
 
+        for(String m : modules){
+            m = m.replaceAll("\\s+","");
+            listener.getLogger().println("\n\t                      " + m.toUpperCase()+"\n");
+            pom.module = m+"/";
+            this.printInfos();
+        }
+        pom.module = "";
+        return modules;
+    }
+
+    /**
+     * Writes in /target/spoon-reports/result-spoon.xml :
+     *
+     * Modules
+     * Commit id version
+     * Project spooned compiles
+     * Project spooned tests run
+     * Time to spoon
+     *
+     * @param modules
+     * @throws IOException
+     * @throws InterruptedException
+     */
     public void writeToFile(String[] modules) throws IOException, InterruptedException {
 
         String idVersionGit = build.getEnvironment(listener).get("GIT_COMMIT");
-
-
         StringBuilder sb = new StringBuilder("<section name=\"\">\n" +
                 "  <table>\n" +
                 "    <tr>\n" +
@@ -114,7 +142,7 @@ public class InfoGetter {
             sb.append("      <td>");
             try {
                 sb.append(getTestsInfos(module));
-            } catch (InvalidBuildFileFormatException e) {
+            } catch (InvalidFileFormatException e) {
                 e.printStackTrace();
             }
             sb.append("</td>\n");
@@ -134,7 +162,7 @@ public class InfoGetter {
             listener.getLogger().println("dirs 'target/spoon-reports/' not created");
         }
 
-        file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.txt");
+        file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.xml");
         listener.getLogger().println(" file:"+ file.getAbsolutePath());
         if (!file.createNewFile()) {
             listener.getLogger().println("file \"result-spoon.txt\" not created");
@@ -155,29 +183,42 @@ public class InfoGetter {
         }
     }
 
+    /**
+     * Gather results of tests after compilation from  module/target/surefire-reports :
+     * tests
+     * errors
+     * skipped
+     * failures
+     *
+     * @param module
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws InvalidFileFormatException
+     */
     public String getTestsInfos(String module)
-            throws IOException, InterruptedException, InvalidBuildFileFormatException {
+            throws IOException, InterruptedException, InvalidFileFormatException {
 
         int tests = 0, errors = 0, skipped = 0, failures = 0;
         FilePath dir;
 
-
-        dir = new FilePath(workspace, module + "/target/surefire-reports");
-        listener.getLogger().println(" NAME Parent DIR: "+module);
-//        listener.getLogger().println(" DIR list : "+dir.list().toString());
+        if(module != "") {
+            dir = new FilePath(workspace, module + "/target/surefire-reports");
+        }else{
+            dir = new FilePath(workspace, "target/surefire-reports");
+        }
 
         for (FilePath f : dir.list()) {
             if( f.getName().endsWith("txt")){
                 break;
             }else {
-//                listener.getLogger().println(" NAME: "+f.getName());
                 Document doc = getTestsDocumentFile(f);
 
                 //get test results parsing
-                tests += getTestsResults("tests", doc);
-                errors += getTestsResults("errors", doc);
-                skipped += getTestsResults("skipped", doc);
-                failures += getTestsResults("failures", doc);
+                tests += getTestResult("tests", doc);
+                errors += getTestResult("errors", doc);
+                skipped += getTestResult("skipped", doc);
+                failures += getTestResult("failures", doc);
             }
         }
 
@@ -185,37 +226,47 @@ public class InfoGetter {
     }
 
 
-
-
-    public int getTestsResults(String attribute, Document document) throws InvalidBuildFileFormatException, IOException {
+    /**
+     * Get result from a test in input parameter according to a document file
+     *
+     * @param attribute
+     * @param document
+     * @return the int read from the document
+     * @throws InvalidFileFormatException
+     * @throws IOException
+     */
+    public int getTestResult(String attribute, Document document) throws InvalidFileFormatException, IOException {
 
         int info = -1;
-//        Document document = null;
-//
-//        document = getTestsDocumentFile(workspace);
 
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
+
         try {
-//            +<testsuite name="tyre.commandline.CacheCreateRequirementsCommandTest" tests="3" skipped="0" errors="0" time="0.072" failures="0">
             expression = xPath.compile("/testsuite/@" + attribute);
             info = Integer.parseInt(expression.evaluate(document));
 
         } catch (XPathExpressionException e) {
             assert document != null;
-            throw new InvalidBuildFileFormatException(document.getBaseURI()
+            throw new InvalidFileFormatException(document.getBaseURI()
                     + " is not a valid POM file.");
         }
 
         if (info == -1) {
             assert document != null;
-            throw new InvalidBuildFileFormatException(
+            throw new InvalidFileFormatException(
                     "No info information found in " + document.getBaseURI());
         }
         return info;
     }
 
-
+    /**
+     * Get the Test Document as a Document
+     *
+     * @param file
+     * @return the test Document from the FilePath
+     * @throws IOException
+     */
     public Document getTestsDocumentFile(FilePath file) throws IOException {
         Document testsDocument = null;
         try {
@@ -249,9 +300,9 @@ public class InfoGetter {
 
         {
             try {
-                throw new InvalidBuildFileFormatException(e.getMessage());
-            } catch (InvalidBuildFileFormatException e1) {
-                listener.getLogger().println("InvalidBuildFileFormatException ");
+                throw new InvalidFileFormatException(e.getMessage());
+            } catch (InvalidFileFormatException e1) {
+                listener.getLogger().println("InvalidFileFormatException ");
                 e1.printStackTrace();
             }
         }

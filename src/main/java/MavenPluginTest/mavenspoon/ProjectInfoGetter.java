@@ -3,28 +3,19 @@ package MavenPluginTest.mavenspoon;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.console.AnnotatedLargeText;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
 import hudson.tasks.*;
 import jenkins.tasks.SimpleBuildStep;
-import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
-import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.io.StringWriter;
 
 /**
  * Sample {@link Builder}.
@@ -66,7 +57,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         return BuildStepMonitor.BUILD;
     }
 
-
     /*
         /**
         * We'll use this from the <tt>config.jelly</tt>.
@@ -77,25 +67,32 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         */
 
+    /**
+     * method called to start the plugin: contain the main steps of the plugin behaviour.
+     *
+     * @param build
+     * @param workspace
+     * @param launcher
+     * @param listener
+     * @throws IOException
+     * @throws InterruptedException
+     */
     @Override
     public void perform( Run<?, ?> build, @Nonnull FilePath workspace, @Nonnull Launcher launcher, @Nonnull TaskListener listener) throws IOException, InterruptedException {
-
-
 
         //get pre spoon infos about the build
         InfoGetter infos = new InfoGetter(new POMGetter(workspace),workspace, listener, build);
         String[] modules = new String[0];
+
         try {
-            modules = infos.getInfos();
-        } catch (InvalidBuildFileFormatException e) {
+            infos.printInfos();
+            modules = infos.getModules();
+        } catch (InvalidFileFormatException e) {
             e.printStackTrace();
             listener.getLogger().println("\n\n info Reading  Failed ! \n\n");
         }
-        for( String m : modules){
-            listener.getLogger().println("\n\n MODULE: "+m+"! \n\n");
-        }
-        infos.writeToFile(modules);
 
+        infos.writeToFile(modules);
 
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace, build);
@@ -103,13 +100,10 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
             if (!pm.insertSpoonPlugin()) {
                 listener.getLogger().println("\n\n insertion Failed ! \n\n");
             }
-        } catch (ParserConfigurationException | TransformerException | SAXException | InvalidBuildFileFormatException e) {
+        } catch (ParserConfigurationException | TransformerException | SAXException | InvalidFileFormatException e) {
             e.printStackTrace();
         }
     }
-
-
-
 
     /**
      * Descriptor for {@link ProjectInfoGetter}. Used as a singleton.
@@ -138,7 +132,7 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
-            return "Analyse POM file";
+            return "Spoon the Project";
         }
 
     }
