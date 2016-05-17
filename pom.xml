@@ -19,7 +19,7 @@
   <packaging>hpi</packaging>
 
   <name>MavenPluginTest</name>
-  <description>TODO</description>
+  <description>The aim of this plugin is to compiles an open-source project and spoons the project</description>
   <url>https://wiki.jenkins-ci.org/display/JENKINS/TODO+Plugin</url>
   <licenses>
     <license>

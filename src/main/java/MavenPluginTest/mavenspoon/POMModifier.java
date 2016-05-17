@@ -14,10 +14,11 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
+import java.util.List;
 
 /**
  * Insert the spoon plugin in the project pom file
- *
+ * <p/>
  * Created by Louis Hancquart on 2016-04-01.
  */
 public class POMModifier {
@@ -36,12 +37,18 @@ public class POMModifier {
 
     /**
      * Insert the spoon plugin in the project pom file:
-     *
+     * <p/>
      * - get the pom file as a Document
      * - insert the spoon plugin in the data structure
      * - turn the data structure into a String content
      * - overwrite the original pom file with the new content
      *
+     * @param debug
+     * @param compliance
+     * @param noClasspath
+     * @param noCopyResources
+     * @param processors
+     * @param processors1
      * @return true if the insert is successful
      * @throws ParserConfigurationException
      * @throws IOException
@@ -49,7 +56,7 @@ public class POMModifier {
      * @throws TransformerException
      * @throws InvalidFileFormatException
      */
-    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
+    protected boolean insertSpoonPlugin(boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processors, String processors1) throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
         Document doc = pom.getPom(this.workspace);
 
         //create plugin nodes if doesn't exist
@@ -57,20 +64,20 @@ public class POMModifier {
         Node newNode;
         NodeList nodes;
 
-        if (doc.getElementsByTagName("build").getLength()<1) {
+        if (doc.getElementsByTagName("build").getLength() < 1) {
             p = doc.createElement("build");
             newNode = doc.getLastChild().appendChild(p);
-        }else{
+        } else {
             nodes = doc.getElementsByTagName("build");
-            newNode =  nodes.item(0);
+            newNode = nodes.item(0);
         }
 
-        if (doc.getElementsByTagName("plugins").getLength()<1) {
+        if (doc.getElementsByTagName("plugins").getLength() < 1) {
             p = doc.createElement("plugins");
             newNode = newNode.appendChild(p);
-        }else{
+        } else {
             nodes = doc.getElementsByTagName("plugins");
-            newNode =  nodes.item(0);
+            newNode = nodes.item(0);
         }
 
 //      Add spoon plugin in the DOM
@@ -120,6 +127,44 @@ public class POMModifier {
         p.appendChild(innerXML);
         newNode.appendChild(p);
 
+
+//        <configuration>
+        newNode = newNode.getParentNode().getParentNode().getParentNode().getParentNode();
+//          <debug>${valeur paramétrable}</debug>
+        p = doc.createElement("debug");
+        innerXML = doc.createTextNode(String.valueOf(debug));
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+
+//          <compliance>${valeur paramétrable}</compliance>
+        p = doc.createElement("compliance");
+        innerXML = doc.createTextNode(String.valueOf(compliance));
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+//          <noClasspath>${valeur paramétrable}</noClasspath>
+        p = doc.createElement("noClasspath");
+        innerXML = doc.createTextNode(String.valueOf(noClasspath));
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+
+//          <noCopyResources>${valeur paramétrable}</noCopyResources>
+        p = doc.createElement("noCopyResources");
+        innerXML = doc.createTextNode(String.valueOf(noCopyResources));
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+
+//          <processors>
+            p = doc.createElement("processors");
+            newNode = newNode.appendChild(p);
+
+//              <processor>${valeur paramétrable}</processor>
+        p = doc.createElement("processor");
+        innerXML = doc.createTextNode(processors);
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+        innerXML = doc.createTextNode(processors1);
+        p.appendChild(innerXML);
+
         doc.normalizeDocument();
 
 //      Get the XML to string
@@ -149,11 +194,11 @@ public class POMModifier {
      * @throws InterruptedException
      */
     public void writeToFile(String source) throws IOException, InterruptedException {
-       BufferedWriter bw = null;
+        BufferedWriter bw = null;
 
         try {
             FilePath pomfile = new FilePath(workspace, "pom.xml");
-            File file = new File( build.getEnvironment(listener).get("WORKSPACE")+"\\"+pomfile.getName());
+            File file = new File(build.getEnvironment(listener).get("WORKSPACE") + "\\" + pomfile.getName());
 
             if (!file.delete()) {
                 listener.getLogger().println("new pom not deleted");
