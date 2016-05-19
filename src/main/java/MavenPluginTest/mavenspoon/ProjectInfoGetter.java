@@ -42,7 +42,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         this.processor2 = processor2;
     }
 
-
     @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.BUILD;
@@ -75,7 +74,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         infos.writeToFile(modules);
 
-
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace, build);
         try {
@@ -90,20 +88,12 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         } catch (ParserConfigurationException | TransformerException | SAXException | InvalidFileFormatException e) {
             e.printStackTrace();
         }
-
-        
     }
-
 
     @Override
     public DescriptorImpl getDescriptor() {
-        // see Descriptor javadoc for more about what a descriptor is.
         return (DescriptorImpl)super.getDescriptor();
     }
-
-
-
-
 
 
     @Extension
@@ -113,9 +103,6 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         private boolean noCopyResources;
         private boolean noClasspath;
         private int compliance;
-
-
-
 
         /**
          * In order to load the persisted global configuration, you have to
