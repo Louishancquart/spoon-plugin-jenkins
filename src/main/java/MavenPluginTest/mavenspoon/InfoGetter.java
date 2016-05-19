@@ -46,9 +46,9 @@ public class InfoGetter {
      *      maven-compiler-plugin dependency is used ( if yes : check java version )
      *      checkstyle
      *      PMD
-
+     *@return module list
      */
-    public void printInfos() throws IOException, InterruptedException,InvalidFileFormatException {
+    public String[] printInfos() throws IOException, InterruptedException,InvalidFileFormatException {
         listener.getLogger().println("\t Actifact ID        : " + pom.getInfo("artifactId"));
         listener.getLogger().println("\t Version            : " + pom.getInfo("version"));
 
@@ -65,31 +65,20 @@ public class InfoGetter {
         listener.getLogger().println("\t Git Commit id      : " + build.getEnvironment(listener).get("GIT_COMMIT"));
         listener.getLogger().println("\t Workspace          : " + build.getEnvironment(listener).get("WORKSPACE"));
 
-
-    }
-
-    /**
-     *Call printInfos() for each modules found in the pom file:
-     *
-     * @return module list
-     * @throws IOException
-     * @throws InvalidFileFormatException
-     * @throws InterruptedException
-     */
-    public String[] getModules() throws IOException, InvalidFileFormatException, InterruptedException {
-        //get  modules list
         listener.getLogger().println("\t MODULES            : ");
+
+        //get  modules list
         String[] modules = pom.getInfo("modules").trim().split("\\n");
 
         for(String m : modules){
             m = m.replaceAll("\\s+","");
             listener.getLogger().println("\n\t                      " + m.toUpperCase()+"\n");
-            pom.module = m+"/";
-            this.printInfos();
         }
-        pom.module = "";
+
         return modules;
     }
+
+
 
     /**
      * Writes in /target/spoon-reports/result-spoon.xml :

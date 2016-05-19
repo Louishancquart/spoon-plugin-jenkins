@@ -24,11 +24,12 @@ import java.io.IOException;
 public class POMGetter {
 
     public final FilePath workspace;
-    private static final String BUILD_FILE = "pom.xml";
-    public String module = "";
+    private final String BUILD_FILE = "pom.xml";
+    public String module;
 
     public POMGetter(FilePath workspace) {
         this.workspace = workspace;
+        this.module = "";
     }
 
     /**

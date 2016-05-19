@@ -6,9 +6,13 @@ import hudson.Launcher;
 import hudson.model.AbstractProject;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.*;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.BuildStepMonitor;
+import hudson.tasks.Builder;
 import jenkins.tasks.SimpleBuildStep;
+import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.StaplerRequest;
 import org.xml.sax.SAXException;
 
 import javax.annotation.Nonnull;
@@ -21,22 +25,21 @@ import java.io.IOException;
  */
 public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
-    private boolean debug;
-    private int compliance;
-    private boolean noClasspath;
-    private boolean noCopyResources;
-    private String processors;
-    private String processors1;
+    private  boolean debug =false;
+    private  int compliance = 1;
+    private  boolean noClasspath = false;
+    private  boolean noCopyResources = false;
+    private  String processor1 ="proc1";
+    private  String processor2 = "proc2";
 
-    // Fields in config.jelly must match the parameter names in the "DataBoundConstructor"
     @DataBoundConstructor
-    public ProjectInfoGetter(boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processors, String processors1) {
+    public ProjectInfoGetter( boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2) {
         this.debug = debug;
         this.compliance = compliance;
         this.noClasspath = noClasspath;
         this.noCopyResources = noCopyResources;
-        this.processors = processors;
-        this.processors1 = processors1;
+        this.processor1 = processor1;
+        this.processor2 = processor2;
     }
 
 
@@ -64,8 +67,7 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
         String[] modules = new String[0];
 
         try {
-            infos.printInfos();
-            modules = infos.getModules();
+            modules = infos.printInfos();
         } catch (InvalidFileFormatException e) {
             e.printStackTrace();
             listener.getLogger().println("\n\n info Reading  Failed ! \n\n");
@@ -73,64 +75,47 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
 
         infos.writeToFile(modules);
 
+
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace), listener, workspace, build);
         try {
-            if (!pm.insertSpoonPlugin( debug, compliance, noClasspath, noCopyResources, processors,processors1)) {
+            if (!pm.insertSpoonPlugin(
+                    String.valueOf(getDescriptor().isDebug()),
+                    String.valueOf(getDescriptor().getCompliance()),
+                    String.valueOf(getDescriptor().isNoClasspath()),
+                    String.valueOf(getDescriptor().isNoCopyResources())
+                    )){
                 listener.getLogger().println("\n\n insertion Failed ! \n\n");
             }
         } catch (ParserConfigurationException | TransformerException | SAXException | InvalidFileFormatException e) {
             e.printStackTrace();
         }
+
+        
+    }
+
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        // see Descriptor javadoc for more about what a descriptor is.
+        return (DescriptorImpl)super.getDescriptor();
     }
 
 
 
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public int getCompliance() {
-        return compliance;
-    }
 
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public boolean isDebug() {
-        return debug;
-    }
-
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public boolean isNoClasspath() {
-        return noClasspath;
-    }
-
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public boolean isNoCopyResources() {
-        return noCopyResources;
-    }
-
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public String getProcessors() {
-        return processors;
-    }
-
-    /**
-     * Getter used by <tt>config.jelly</tt>.
-     */
-    public String getProcessors1() {
-        return processors1;
-    }
 
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+
+        private boolean debug;
+        private boolean noCopyResources;
+        private boolean noClasspath;
+        private int compliance;
+
+
+
 
         /**
          * In order to load the persisted global configuration, you have to
@@ -144,11 +129,53 @@ public class ProjectInfoGetter extends Builder implements SimpleBuildStep {
             return true;
         }
 
+        @Override
+        public boolean configure(StaplerRequest staplerRequest, JSONObject json) throws FormException {
+            debug = json.getBoolean("isDebug");
+            noCopyResources = json.getBoolean("isNoCopyResources");
+            noClasspath = json.getBoolean("isNoClasspath");
+            compliance = json.getInt("getCompliance");
+
+            save();
+            return true; // indicate that everything is good so far
+        }
+
+
         /**
          * This human readable name is used in the configuration screen.
          */
         public String getDisplayName() {
             return "Spoon the Project";
+        }
+
+
+
+        /**
+         * Getter used by <tt>config.jelly</tt>.
+         */
+        public int getCompliance() {
+            return compliance;
+        }
+
+        /**
+         * Getter used by <tt>config.jelly</tt>.
+         */
+        public boolean isDebug() {
+            return debug;
+        }
+
+        /**
+         * Getter used by <tt>config.jelly</tt>.
+         */
+        public boolean isNoClasspath() {
+            return noClasspath;
+        }
+
+        /**
+         * Getter used by <tt>config.jelly</tt>.
+         */
+        public boolean isNoCopyResources() {
+            return noCopyResources;
         }
 
     }
