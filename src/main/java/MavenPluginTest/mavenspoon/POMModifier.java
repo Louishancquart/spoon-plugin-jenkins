@@ -43,14 +43,13 @@ public class POMModifier {
      * - turn the data structure into a String content
      * - overwrite the original pom file with the new content
      *
-     * @param debug  @return true if the insert is successful
      * @throws ParserConfigurationException
      * @throws IOException
      * @throws SAXException
      * @throws TransformerException
      * @throws InvalidFileFormatException
      */
-    protected boolean insertSpoonPlugin(String debug, String compliance, String noClasspath, String noCopyResources) throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
+    protected boolean insertSpoonPlugin() throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
         Document doc = pom.getPom(this.workspace);
 
         //create plugin nodes if doesn't exist
@@ -122,33 +121,47 @@ public class POMModifier {
         newNode.appendChild(p);
 
 
-//        <configuration>
-        newNode = newNode.getParentNode().getParentNode().getParentNode();
-        p = doc.createElement("configuration");
-        newNode = newNode.appendChild(p);
-
-//          <debug>${valeur paramétrable}</debug>
-        p = doc.createElement("debug");
-        innerXML = doc.createTextNode(debug);
-        p.appendChild(innerXML);
-        newNode.appendChild(p);
-
-//          <compliance>${valeur paramétrable}</compliance>
-        p = doc.createElement("compliance");
-        innerXML = doc.createTextNode(compliance);
-        p.appendChild(innerXML);
-        newNode.appendChild(p);
-//          <noClasspath>${valeur paramétrable}</noClasspath>
-        p = doc.createElement("noClasspath");
-        innerXML = doc.createTextNode(noClasspath);
-        p.appendChild(innerXML);
-        newNode.appendChild(p);
-
-//          <noCopyResources>${valeur paramétrable}</noCopyResources>
-        p = doc.createElement("noCopyResources");
-        innerXML = doc.createTextNode(noCopyResources );
-        p.appendChild(innerXML);
-        newNode.appendChild(p);
+////        <configuration>
+//        newNode = newNode.getParentNode().getParentNode().getParentNode();
+//        p = doc.createElement("configuration");
+//        newNode = newNode.appendChild(p);
+//
+////          <debug>${valeur paramétrable}</debug>
+//        p = doc.createElement("debug");
+//        innerXML = doc.createTextNode(debug);
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
+//
+////          <compliance>${valeur paramétrable}</compliance>
+//        p = doc.createElement("compliance");
+//        innerXML = doc.createTextNode(compliance);
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
+////          <noClasspath>${valeur paramétrable}</noClasspath>
+//        p = doc.createElement("noClasspath");
+//        innerXML = doc.createTextNode(noClasspath);
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
+//
+////          <noCopyResources>${valeur paramétrable}</noCopyResources>
+//        p = doc.createElement("noCopyResources");
+//        innerXML = doc.createTextNode(noCopyResources );
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
+//
+////          <processors>
+//        p = doc.createElement("processors");
+//        newNode = newNode.appendChild(p);
+//
+////              <processor>${valeur paramétrable}</processor>
+//        p = doc.createElement("processor");
+//        innerXML = doc.createTextNode("proc1");
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
+//        p = doc.createElement("processor");
+//        innerXML = doc.createTextNode("proc2");
+//        p.appendChild(innerXML);
+//        newNode.appendChild(p);
 
 
         doc.normalizeDocument();

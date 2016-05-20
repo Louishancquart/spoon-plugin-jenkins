@@ -101,6 +101,77 @@ public class InfoGetter {
                 "    <tr>\n" +
                 "       <td fontattribute=\"bold\">Module</td>\n" +
                 "       <td fontattribute=\"bold\">Commit id version</td>\n" +
+                "    </tr>\n");
+
+
+
+
+        for (String module : modules) {
+            module = module.replaceAll("\\s+","");
+
+            sb.append("    <tr>\n");
+            sb.append("      <td>");
+            sb.append(module);
+            sb.append("</td>\n");
+            sb.append("      <td>");
+            sb.append(idVersionGit);
+            sb.append("</td>\n");
+
+            sb.append("    </tr>\n");
+        }
+
+
+        sb.append(" </table> \n </section>\n");
+
+
+        File file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports/");
+
+        if (!file.mkdirs()) {
+            listener.getLogger().println("dirs 'target/spoon-reports/' not created");
+        }
+
+        file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.xml");
+        listener.getLogger().println(" file:"+ file.getAbsolutePath());
+        if (!file.createNewFile()) {
+            listener.getLogger().println("file \"result-spoon.txt\" not created");
+        }
+
+        if (!file.exists()) {
+            listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath() + "\n\n");
+            if (!file.createNewFile()) {
+                listener.getLogger().println("file not created");
+            }
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), "UTF-8"))) {
+            bw.write(sb.toString());
+            bw.flush();
+
+            listener.getLogger().println(sb);
+        }
+    }
+
+    /**
+     * Writes in /target/spoon-reports/result-spoon.xml :
+     *
+     * Modules
+     * Commit id version
+     * Project spooned compiles
+     * Project spooned tests run
+     * Time to spoon
+     *
+     * @param modules
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    public void writeToFileAfterBuild(String[] modules) throws IOException, InterruptedException {
+
+        String idVersionGit = build.getEnvironment(listener).get("GIT_COMMIT");
+        StringBuilder sb = new StringBuilder("<section name=\"\">\n" +
+                "  <table>\n" +
+                "    <tr>\n" +
+                "       <td fontattribute=\"bold\">Module</td>\n" +
+                "       <td fontattribute=\"bold\">Commit id version</td>\n" +
                 "       <td fontattribute=\"bold\">Project spooned compiles</td>\n" +
                 "       <td fontattribute=\"bold\">Project spooned tests run</td>\n" +
                 "       <td fontattribute=\"bold\">Time to spoon</td>\n" +
@@ -152,7 +223,7 @@ public class InfoGetter {
             listener.getLogger().println("dirs 'target/spoon-reports/' not created");
         }
 
-        file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.xml");
+        file = new File(file.getAbsolutePath(), "result-spoon.xml");
         listener.getLogger().println(" file:"+ file.getAbsolutePath());
         if (!file.createNewFile()) {
             listener.getLogger().println("file \"result-spoon.txt\" not created");
@@ -191,7 +262,7 @@ public class InfoGetter {
 
         int tests = 0, errors = 0, skipped = 0, failures = 0;
         FilePath dir;
-
+        listener.getLogger().println("WORKSPACE:"+workspace.toString());
         if(module != "") {
             dir = new FilePath(workspace, module + "/target/surefire-reports");
         }else{

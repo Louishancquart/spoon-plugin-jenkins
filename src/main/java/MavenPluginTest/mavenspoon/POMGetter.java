@@ -1,6 +1,7 @@
 package MavenPluginTest.mavenspoon;
 
 import hudson.FilePath;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
 import org.jenkinsci.remoting.RoleChecker;
 import org.w3c.dom.Document;
@@ -25,11 +26,12 @@ public class POMGetter {
 
     public final FilePath workspace;
     private final String BUILD_FILE = "pom.xml";
-    public String module;
+    private final TaskListener listener;
 
-    public POMGetter(FilePath workspace) {
+
+    public POMGetter(FilePath workspace, TaskListener listener) {
         this.workspace = workspace;
-        this.module = "";
+        this.listener = listener;
     }
 
     /**
@@ -42,6 +44,11 @@ public class POMGetter {
      */
     public String getInfo(String expressionToCompile) throws InvalidFileFormatException, IOException {
         String info = null;
+
+        listener.getLogger().println("WORKSPACE:"+workspace.toString());
+
+
+
         Document document = getPom(workspace);
 
         XPath xPath = XPathFactory.newInstance().newXPath();
@@ -118,7 +125,7 @@ public class POMGetter {
             throws InvalidFileFormatException, IOException {
 
         FilePath pom;
-        pom = new FilePath(workspace, module+BUILD_FILE);
+        pom = new FilePath(workspace, BUILD_FILE);
         Document pomDocument;
         try {
             pomDocument = pom.act(new FilePath.FileCallable<Document>() {
