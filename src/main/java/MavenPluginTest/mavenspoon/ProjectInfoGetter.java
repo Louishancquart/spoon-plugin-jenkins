@@ -152,32 +152,6 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
                     }
 
                     infos.writeToFileAfterBuild(modules);
-
-//                build.getEnvironment(listener).entrySet(new Map.Entry<String,String>())
-
-////                //spoon of spoon
-////                if(spoonOfSpoon){
-////                    //copy files
-//                File source = new File(build.getEnvironment(listener).get("WORKSPACE")+"\\target\\generated-sources\\spoon" );
-//                File dest = new File(build.getEnvironment(listener).get("WORKSPACE")+"\\src\\main\\java" );
-//                try {
-//                    FileUtils.copyDirectory(source, dest);
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//                }
-//                build.getExecutor().run();
-
-//                Hudson.getActiveInstance().getQueue().schedule()
-//                if (isRebuildAvailable()) {
-//
-//                    List<Action> actions = copyBuildCausesAndAddUserCause(currentBuild);
-//                    ParametersAction action = currentBuild.getAction(ParametersAction.class);
-//                    actions.add(action);
-//
-//                    Hudson.getInstance().getQueue().schedule((Queue.Task) build.getParent(), 0, actions);
-//                    response.sendRedirect("../../");
-//                }
             }
         });
 

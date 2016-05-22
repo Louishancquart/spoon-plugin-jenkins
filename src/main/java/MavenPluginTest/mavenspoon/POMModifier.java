@@ -157,9 +157,6 @@ public class POMModifier {
         p.appendChild(innerXML);
         newNode.appendChild(p);
 
-
-
-
         if( processor1 != "" && processor1 != null ) {
 //          <processors>
             p = doc.createElement("processors");

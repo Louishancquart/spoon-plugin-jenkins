@@ -30,8 +30,4 @@
         <f:textbox default=""/>
     </f:entry>
 
-    <!--<f:entry title="Spoon Spoon result" field="spoonOfSpoon">-->
-        <!--<f:checkbox/>-->
-    <!--</f:entry>-->
-
 </j:jelly>
