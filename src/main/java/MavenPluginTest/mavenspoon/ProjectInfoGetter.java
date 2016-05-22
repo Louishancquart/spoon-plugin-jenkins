@@ -5,18 +5,23 @@ import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractProject;
+import hudson.model.Hudson;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildWrapperDescriptor;
 import jenkins.tasks.SimpleBuildWrapper;
 import net.sf.json.JSONObject;
+import org.apache.commons.io.FileUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Gather infos from the build and apply Spoon to the job
@@ -29,15 +34,25 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
     private  final boolean noCopyResources;
     private final String processor1;
     private final String processor2;
+    private final String version;
+    private final List<String> listProc;
+    private final boolean spoonOfSpoon;
 
     @DataBoundConstructor
-    public ProjectInfoGetter( boolean doDebug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2) {
+    public ProjectInfoGetter(boolean doDebug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2, String version, List<String> listProc, boolean spoonOfSpoon) {
         this.doDebug = doDebug;
         this.compliance = compliance;
         this.noClasspath = noClasspath;
         this.noCopyResources = noCopyResources;
         this.processor1 = processor1;
         this.processor2 = processor2;
+        this.version = version;
+        this.listProc = listProc;
+        this.spoonOfSpoon = spoonOfSpoon;
+    }
+
+    public boolean getSpoonOfSpoon() {
+        return spoonOfSpoon;
     }
 
     /**
@@ -82,11 +97,18 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
         return noCopyResources;
     }
 
+    /**
+     * Getter used by <tt>config.jelly</tt>.
+     */
+    public List<String> getListProc() {
+        return listProc;
+    }
+
+
     @Override
     public DescriptorImpl getDescriptor() {
         return (DescriptorImpl) super.getDescriptor();
     }
-
 
     @Override
     public void setUp(Context context, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, EnvVars envVars) throws IOException, InterruptedException {
@@ -107,7 +129,7 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
         //insert spoon-plugin in the pom of the project
         POMModifier pm = new POMModifier(new POMGetter(workspace, listener), listener, workspace, build);
         try {
-            if (!pm.insertSpoonPlugin(doDebug,compliance,noClasspath,noCopyResources,processor1, processor2)
+            if (!pm.insertSpoonPlugin(doDebug,compliance,noClasspath,noCopyResources,processor1, processor2, version)
             ){
                 listener.getLogger().println("\n\n insertion Failed ! \n\n");
             }
@@ -130,13 +152,41 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
                     }
 
                     infos.writeToFileAfterBuild(modules);
+
+//                build.getEnvironment(listener).entrySet(new Map.Entry<String,String>())
+
+////                //spoon of spoon
+////                if(spoonOfSpoon){
+////                    //copy files
+//                File source = new File(build.getEnvironment(listener).get("WORKSPACE")+"\\target\\generated-sources\\spoon" );
+//                File dest = new File(build.getEnvironment(listener).get("WORKSPACE")+"\\src\\main\\java" );
+//                try {
+//                    FileUtils.copyDirectory(source, dest);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+//                }
+//                build.getExecutor().run();
+
+//                Hudson.getActiveInstance().getQueue().schedule()
+//                if (isRebuildAvailable()) {
+//
+//                    List<Action> actions = copyBuildCausesAndAddUserCause(currentBuild);
+//                    ParametersAction action = currentBuild.getAction(ParametersAction.class);
+//                    actions.add(action);
+//
+//                    Hudson.getInstance().getQueue().schedule((Queue.Task) build.getParent(), 0, actions);
+//                    response.sendRedirect("../../");
+//                }
             }
         });
+
+
     }
 
-
-
-
+    public String getVersion() {
+        return version;
+    }
 
 
     @Extension

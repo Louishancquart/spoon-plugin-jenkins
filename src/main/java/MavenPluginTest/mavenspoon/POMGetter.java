@@ -45,9 +45,6 @@ public class POMGetter {
     public String getInfo(String expressionToCompile) throws InvalidFileFormatException, IOException {
         String info = null;
 
-        listener.getLogger().println("WORKSPACE:"+workspace.toString());
-
-
 
         Document document = getPom(workspace);
 

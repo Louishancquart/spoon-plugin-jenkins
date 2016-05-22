@@ -19,11 +19,19 @@
     </f:entry>
 
     <f:entry title="Processor1" field="processor1">
-        <f:textbox/>
+        <f:textbox default=""/>
     </f:entry>
 
     <f:entry title="Processor2" field="processor2">
-        <f:textbox/>
+        <f:textbox default=""/>
     </f:entry>
+
+    <f:entry title="Spoon version" field="version">
+        <f:textbox default=""/>
+    </f:entry>
+
+    <!--<f:entry title="Spoon Spoon result" field="spoonOfSpoon">-->
+        <!--<f:checkbox/>-->
+    <!--</f:entry>-->
 
 </j:jelly>

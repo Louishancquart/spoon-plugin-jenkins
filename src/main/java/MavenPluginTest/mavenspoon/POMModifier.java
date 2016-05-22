@@ -52,10 +52,10 @@ public class POMModifier {
      * @param compliance
      * @param noClasspath
      * @param noCopyResources
-     * @param s
      * @param processor1
+     * @param version
      */
-    protected boolean insertSpoonPlugin(boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2) throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
+    protected boolean insertSpoonPlugin(boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2, String version) throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
         Document doc = pom.getPom(this.workspace);
 
         //create plugin nodes if doesn't exist
@@ -125,10 +125,11 @@ public class POMModifier {
         innerXML = doc.createTextNode("generate");
         p.appendChild(innerXML);
         newNode.appendChild(p);
+        newNode = newNode.getParentNode().getParentNode().getParentNode();
+
 
 
 //        <configuration>
-        newNode = newNode.getParentNode().getParentNode().getParentNode();
         p = doc.createElement("configuration");
         newNode = newNode.appendChild(p);
 
@@ -156,7 +157,10 @@ public class POMModifier {
         p.appendChild(innerXML);
         newNode.appendChild(p);
 
-        if( processor1 != "") {
+
+
+
+        if( processor1 != "" && processor1 != null ) {
 //          <processors>
             p = doc.createElement("processors");
             newNode = newNode.appendChild(p);
@@ -165,16 +169,43 @@ public class POMModifier {
             p = doc.createElement("processor");
             innerXML = doc.createTextNode(processor1);
             p.appendChild(innerXML);
-        }
-        if( processor2 != "") {
-            newNode.appendChild(p);
-            p = doc.createElement("processor");
-            innerXML = doc.createTextNode(processor2);
-            p.appendChild(innerXML);
-            newNode.appendChild(p);
-        }
 
-//        doc.normalizeDocument();
+            if( processor2 != "" && processor2 != null ) {
+                newNode.appendChild(p);
+                p = doc.createElement("processor");
+                innerXML = doc.createTextNode(processor2);
+                p.appendChild(innerXML);
+                newNode.appendChild(p);
+            }
+
+        newNode = newNode.getParentNode().getParentNode();
+
+        }
+        if(version != "" && version != null){
+
+//        <dependencies>
+        p = doc.createElement("dependencies");
+        newNode = newNode.appendChild(p);
+//             <dependency>
+        p = doc.createElement("dependency");
+        newNode = newNode.appendChild(p);
+
+//                 <groupId>fr.inria.gforge.spoon</groupId>
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+//                <artifactId>spoon-core</artifactId>
+        p = doc.createElement("artifactId");
+        innerXML = doc.createTextNode("spoon-core");
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+//                <version>${valeur paramétrable}</version>
+        p = doc.createElement("version");
+        innerXML = doc.createTextNode("2.2");
+        p.appendChild(innerXML);
+        newNode.appendChild(p);
+    }
+        doc.normalizeDocument();
+
 
 //      Get the XML to string
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
