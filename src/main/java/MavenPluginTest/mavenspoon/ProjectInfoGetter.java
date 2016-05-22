@@ -177,6 +177,7 @@ public class ProjectInfoGetter extends SimpleBuildWrapper {
 //
 //                    Hudson.getInstance().getQueue().schedule((Queue.Task) build.getParent(), 0, actions);
 //                    response.sendRedirect("../../");
+
 //                }
             }
         });
