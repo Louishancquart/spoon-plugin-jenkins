@@ -14,7 +14,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.util.List;
 
 /**
  * Insert the spoon plugin in the project pom file
@@ -35,6 +34,8 @@ public class POMModifier {
 
     }
 
+
+
     /**
      * Insert the spoon plugin in the project pom file:
      * <p/>
@@ -43,17 +44,18 @@ public class POMModifier {
      * - turn the data structure into a String content
      * - overwrite the original pom file with the new content
      *
+     * @param debug debug mode (if specified in the plugin configuration)
+     * @param compliance compliance number (if specified in the plugin configuration , default  = 6 )
+     * @param noClasspath no classPath (if specified in the plugin configuration)
+     * @param noCopyResources don't do copy ressources (if specified in the plugin configuration)
+     * @param processor1 processor 1 identifier if specified in the plugin configuration
+     *  param processor1 processor 1 identifier if specified in the plugin configuration
+     * @param version spoon version if specified in the plugin configuration
      * @throws ParserConfigurationException
      * @throws IOException
      * @throws SAXException
      * @throws TransformerException
      * @throws InvalidFileFormatException
-     * @param debug
-     * @param compliance
-     * @param noClasspath
-     * @param noCopyResources
-     * @param processor1
-     * @param version
      */
     protected boolean insertSpoonPlugin(boolean debug, int compliance, boolean noClasspath, boolean noCopyResources, String processor1, String processor2, String version) throws ParserConfigurationException, IOException, SAXException, TransformerException, InvalidFileFormatException {
         Document doc = pom.getPom(this.workspace);
@@ -157,7 +159,7 @@ public class POMModifier {
         p.appendChild(innerXML);
         newNode.appendChild(p);
 
-        if( processor1 != "" && processor1 != null ) {
+        if( !processor1.equals("") ) {
 //          <processors>
             p = doc.createElement("processors");
             newNode = newNode.appendChild(p);
@@ -167,7 +169,7 @@ public class POMModifier {
             innerXML = doc.createTextNode(processor1);
             p.appendChild(innerXML);
 
-            if( processor2 != "" && processor2 != null ) {
+            if( !processor2.equals("") ) {
                 newNode.appendChild(p);
                 p = doc.createElement("processor");
                 innerXML = doc.createTextNode(processor2);
@@ -178,8 +180,7 @@ public class POMModifier {
         newNode = newNode.getParentNode().getParentNode();
 
         }
-        if(version != "" && version != null){
-
+        if(!version.equals("")){
 //        <dependencies>
         p = doc.createElement("dependencies");
         newNode = newNode.appendChild(p);
@@ -226,7 +227,7 @@ public class POMModifier {
     /**
      * Write the String data into the pom file of the project - erase the previous content
      *
-     * @param source
+     * @param source XML output to print into the pom file
      * @throws IOException
      * @throws InterruptedException
      */

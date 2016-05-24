@@ -54,7 +54,7 @@ public class InfoGetter {
 
         //check plugins
         listener.getLogger().println("\n PLUGINS: ");
-        Boolean mc = null;
+        Boolean mc;
         mc = pom.hasPlugin("maven-compiler-plugin");
         listener.getLogger().println("\t Has Maven Compiler : " + mc.toString());
         if (mc) {
@@ -89,7 +89,7 @@ public class InfoGetter {
      * Project spooned tests run
      * Time to spoon
      *
-     * @param modules
+     * @param modules String array of the modules found in the main pom file
      * @throws IOException
      * @throws InterruptedException
      */
@@ -160,7 +160,7 @@ public class InfoGetter {
      * Project spooned tests run
      * Time to spoon
      *
-     * @param modules
+     * @param modules String array of modules from the main pom file
      * @throws IOException
      * @throws InterruptedException
      */
@@ -251,8 +251,8 @@ public class InfoGetter {
      * skipped
      * failures
      *
-     * @param module
-     * @return
+     * @param module String of the analyzed module
+     * @return tests String
      * @throws IOException
      * @throws InterruptedException
      * @throws InvalidFileFormatException
@@ -262,8 +262,8 @@ public class InfoGetter {
 
         int tests = 0, errors = 0, skipped = 0, failures = 0;
         FilePath dir;
-        listener.getLogger().println("WORKSPACE:"+workspace.toString());
-        if(module != "") {
+
+        if(!module.equals("")) {
             dir = new FilePath(workspace, module + "/target/surefire-reports");
         }else{
             dir = new FilePath(workspace, "target/surefire-reports");
@@ -290,41 +290,32 @@ public class InfoGetter {
     /**
      * Get result from a test in input parameter according to a document file
      *
-     * @param attribute
-     * @param document
+     * @param attribute Test attribute to be returned
+     * @param document XML Document file scanned
      * @return the int read from the document
      * @throws InvalidFileFormatException
      * @throws IOException
      */
     public int getTestResult(String attribute, Document document) throws InvalidFileFormatException, IOException {
 
-        int info = -1;
-
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
 
         try {
             expression = xPath.compile("/testsuite/@" + attribute);
-            info = Integer.parseInt(expression.evaluate(document));
+            return Integer.parseInt(expression.evaluate(document));
 
         } catch (XPathExpressionException e) {
             assert document != null;
             throw new InvalidFileFormatException(document.getBaseURI()
-                    + " is not a valid POM file.");
+                    + "No info information found in " + document.getBaseURI());
         }
-
-        if (info == -1) {
-            assert document != null;
-            throw new InvalidFileFormatException(
-                    "No info information found in " + document.getBaseURI());
-        }
-        return info;
     }
 
     /**
      * Get the Test Document as a Document
      *
-     * @param file
+     * @param file FilePath of the analyed XML file
      * @return the test Document from the FilePath
      * @throws IOException
      */

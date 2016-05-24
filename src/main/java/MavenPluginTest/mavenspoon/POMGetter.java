@@ -37,13 +37,13 @@ public class POMGetter {
     /**
      * Look for an info under the root "project" in the pom file
      *
-     * @param expressionToCompile
+     * @param expressionToCompile define the expression with XPath conventions to find a node under /project/ node
      * @return true if the pom file contains the node entered in parameter
      * @throws InvalidFileFormatException
      * @throws IOException
      */
     public String getInfo(String expressionToCompile) throws InvalidFileFormatException, IOException {
-        String info = null;
+        String info;
 
 
         Document document = getPom(workspace);
@@ -70,14 +70,14 @@ public class POMGetter {
     /**
      * Check if the project has a plugin associated with the artifactId in parameter
      *
-     * @param pluginArtifactId
+     * @param pluginArtifactId String of the plugin Artifact Id to be looking for
      * @return true if the pom file contains the plugin artifact in parameter
      * @throws InvalidFileFormatException
      * @throws IOException
      */
     public Boolean hasPlugin(String pluginArtifactId) throws InvalidFileFormatException, IOException {
 
-        if(pluginArtifactId == null){
+        if (pluginArtifactId == null) {
             pluginArtifactId = "";
         }
 
@@ -93,7 +93,7 @@ public class POMGetter {
         XPath xPath = XPathFactory.newInstance().newXPath();
         XPathExpression expression;
         try {
-            expression = xPath.compile("/project/build/plugins/plugin[artifactId = '"+pluginArtifactId+"']");
+            expression = xPath.compile("/project/build/plugins/plugin[artifactId = '" + pluginArtifactId + "']");
             info = expression.evaluate(document);
         } catch (XPathExpressionException e) {
             try {
@@ -104,16 +104,13 @@ public class POMGetter {
                 e1.printStackTrace();
             }
         }
-        if (info == null){
-            return false;
-        }
-        return info.length()> 0;
+        return info != null && info.length() > 0;
     }
 
     /**
      * get the pom file as a parsable document
      *
-     * @param workspace
+     * @param workspace FilePath of the job workspace
      * @return the pom file as a Document
      * @throws InvalidFileFormatException
      * @throws IOException
