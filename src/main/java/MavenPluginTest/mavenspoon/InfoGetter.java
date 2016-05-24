@@ -126,20 +126,18 @@ public class InfoGetter {
 
         File file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports/");
 
-        if (!file.mkdirs()) {
-            listener.getLogger().println("dirs 'target/spoon-reports/' not created");
+        if (file.mkdirs()) {
+            listener.getLogger().println("dirs 'target/spoon-reports/' created");
         }
 
         file = new File(build.getEnvironment(listener).get("WORKSPACE") + "/target/spoon-reports", "result-spoon.xml");
-        listener.getLogger().println(" file:"+ file.getAbsolutePath());
-        if (!file.createNewFile()) {
-            listener.getLogger().println("file \"result-spoon.txt\" not created");
+        if (file.createNewFile()) {
+            listener.getLogger().println("file \"result-spoon.txt\" created");
         }
 
         if (!file.exists()) {
-            listener.getLogger().println("\n\n\n\n\n \n" + file.getAbsolutePath() + "\n\n");
-            if (!file.createNewFile()) {
-                listener.getLogger().println("file not created");
+            if (file.createNewFile()) {
+                listener.getLogger().println("file created "+ file.getAbsolutePath() + "\n\n");
             }
         }
 
@@ -270,9 +268,7 @@ public class InfoGetter {
         }
 
         for (FilePath f : dir.list()) {
-            if( f.getName().endsWith("txt")){
-                break;
-            }else {
+            if( !(f.getName().endsWith("txt"))){
                 Document doc = getTestsDocumentFile(f);
 
                 //get test results parsing
@@ -349,7 +345,6 @@ public class InfoGetter {
         } catch (
                 InterruptedException e
                 )
-
         {
             try {
                 throw new InvalidFileFormatException(e.getMessage());
